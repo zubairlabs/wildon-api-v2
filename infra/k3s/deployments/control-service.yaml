@@ -1,0 +1,89 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: control-service
+  namespace: wildon
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: control-service
+  template:
+    metadata:
+      labels:
+        app: control-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: control-service
+          image: ghcr.io/zubairlabs/wildon-api-v2/control-service:local-dev
+          imagePullPolicy: Never
+          env:
+            - name: CONTROL_HTTP_BIND_ADDR
+              value: "0.0.0.0:8084"
+            - name: JWT_EXPECTED_ISSUER
+              value: "https://auth.wildon.local"
+            - name: CONTROL_ALLOWED_HOSTS
+              value: "control-api.wildon.internal,control.wildon.internal,control.wildon.local,localhost,127.0.0.1"
+            - name: CONTROL_INTERNAL_WEB_TOKEN
+              value: "c48ea8212862420baece5d640fdac2afb303d54996ca190c8a321cf18bacee3c"
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: wildon-runtime-secrets
+                  key: DATABASE_URL
+            - name: CORE_GRPC_ENDPOINT
+              value: "https://core-service:50053"
+            - name: BILLING_GRPC_ENDPOINT
+              value: "https://billing-service:50059"
+            - name: INTERNAL_CALLER_SERVICE
+              value: "control-service"
+            - name: DEVICE_GATEWAY_INTERNAL_BASE_URL
+              value: "http://device-gateway-service:9080"
+            - name: DEVICE_GATEWAY_INTERNAL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: wildon-shared-secrets
+                  key: device_gateway_internal_token
+            - name: INTERNAL_TLS_ENABLE_CLIENT
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_SERVER_TLS
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_CLIENT_AUTH
+              value: "true"
+            - name: INTERNAL_AUTH_REQUIRE_MTLS
+              value: "true"
+            - name: INTERNAL_AUTH_SPIFFE_PREFIX
+              value: "spiffe://wildon.internal/service/"
+            - name: INTERNAL_TLS_CA_CERT_PATH
+              value: "/var/run/wildon/pki/ca.crt"
+            - name: INTERNAL_TLS_SERVER_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_SERVER_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+            - name: INTERNAL_TLS_CLIENT_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_CLIENT_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+          volumeMounts:
+            - name: internal-grpc-tls
+              mountPath: /var/run/wildon/pki
+              readOnly: true
+      volumes:
+        - name: internal-grpc-tls
+          secret:
+            secretName: control-service-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: control-service
+  namespace: wildon
+spec:
+  selector:
+    app: control-service
+  ports:
+    - name: http
+      port: 8084
+      targetPort: 8084

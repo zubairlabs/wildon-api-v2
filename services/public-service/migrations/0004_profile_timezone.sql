@@ -1,0 +1,2 @@
+ALTER TABLE public_app.user_profiles
+ADD COLUMN IF NOT EXISTS timezone TEXT NOT NULL DEFAULT 'UTC';

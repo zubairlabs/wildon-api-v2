@@ -1,0 +1,660 @@
+syntax = "proto3";
+
+package wildon.billing.v1;
+
+service BillingService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ResolveEntitlement(ResolveEntitlementRequest) returns (ResolveEntitlementResponse);
+  rpc ValidateUserEntitlement(ValidateUserEntitlementRequest) returns (ValidateUserEntitlementResponse);
+  rpc RecordUsage(RecordUsageRequest) returns (RecordUsageResponse);
+  rpc IngestBillingWebhook(IngestBillingWebhookRequest) returns (IngestBillingWebhookResponse);
+  rpc GetSubscription(GetSubscriptionRequest) returns (GetSubscriptionResponse);
+  rpc UpsertSubscription(UpsertSubscriptionRequest) returns (UpsertSubscriptionResponse);
+  rpc ListPlans(ListPlansRequest) returns (ListPlansResponse);
+  rpc CreatePlan(CreatePlanRequest) returns (CreatePlanResponse);
+  rpc UpdatePlan(UpdatePlanRequest) returns (UpdatePlanResponse);
+  rpc DeletePlan(DeletePlanRequest) returns (DeletePlanResponse);
+  rpc ListSubscriptions(ListSubscriptionsRequest) returns (ListSubscriptionsResponse);
+  rpc CreateSubscription(CreateSubscriptionRequest) returns (CreateSubscriptionResponse);
+  rpc UpdateSubscription(UpdateSubscriptionRequest) returns (UpdateSubscriptionResponse);
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse);
+  rpc ListInvoices(ListInvoicesRequest) returns (ListInvoicesResponse);
+  rpc ListLedgerEntries(ListLedgerEntriesRequest) returns (ListLedgerEntriesResponse);
+  rpc RefundTransaction(RefundTransactionRequest) returns (RefundTransactionResponse);
+
+  // --- Device-first billing (v2) ---
+
+  // Payment Methods
+  rpc ListPaymentMethods(ListPaymentMethodsRequest) returns (ListPaymentMethodsResponse);
+  rpc CreateSetupIntent(CreateSetupIntentRequest) returns (CreateSetupIntentResponse);
+  rpc AddPaymentMethod(AddPaymentMethodRequest) returns (AddPaymentMethodResponse);
+  rpc SetDefaultPaymentMethod(SetDefaultPaymentMethodRequest) returns (SetDefaultPaymentMethodResponse);
+  rpc RemovePaymentMethod(RemovePaymentMethodRequest) returns (RemovePaymentMethodResponse);
+
+  // Subscription Plans
+  rpc ListSubscriptionPlans(ListSubscriptionPlansRequest) returns (ListSubscriptionPlansResponse);
+  rpc GetSubscriptionPlan(GetSubscriptionPlanRequest) returns (GetSubscriptionPlanResponse);
+
+  // Device Subscriptions
+  rpc ListDeviceSubscriptions(ListDeviceSubscriptionsRequest) returns (ListDeviceSubscriptionsResponse);
+  rpc GetDeviceSubscription(GetDeviceSubscriptionRequest) returns (GetDeviceSubscriptionResponse);
+  rpc CreateDeviceSubscription(CreateDeviceSubscriptionRequest) returns (CreateDeviceSubscriptionResponse);
+  rpc CancelDeviceSubscription(CancelDeviceSubscriptionRequest) returns (CancelDeviceSubscriptionResponse);
+  rpc ResumeDeviceSubscription(ResumeDeviceSubscriptionRequest) returns (ResumeDeviceSubscriptionResponse);
+
+  // Invoices v2
+  rpc ListInvoicesV2(ListInvoicesV2Request) returns (ListInvoicesV2Response);
+  rpc GetInvoiceV2(GetInvoiceV2Request) returns (GetInvoiceV2Response);
+  rpc GetInvoiceHtml(GetInvoiceHtmlRequest) returns (GetInvoiceHtmlResponse);
+  rpc RetryInvoicePayment(RetryInvoicePaymentRequest) returns (RetryInvoicePaymentResponse);
+
+  // Billing Summary
+  rpc GetBillingSummary(GetBillingSummaryRequest) returns (GetBillingSummaryResponse);
+
+  // Refunds (admin-only, called via control-service)
+  rpc CreateRefund(CreateRefundRequest) returns (CreateRefundResponse);
+  rpc ListRefundsByInvoice(ListRefundsByInvoiceRequest) returns (ListRefundsByInvoiceResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+message ResolveEntitlementRequest {
+  string user_id = 1;
+  string feature_key = 2;
+}
+
+message ResolveEntitlementResponse {
+  bool allowed = 1;
+  string plan = 2;
+  string reason = 3;
+}
+
+message ValidateUserEntitlementRequest {
+  string user_id = 1;
+  string entitlement_key = 2;
+}
+
+message ValidateUserEntitlementResponse {
+  bool allowed = 1;
+  string reason = 2;
+  string plan = 3;
+  string subscription_status = 4;
+  int32 device_limit = 5;
+  int32 current_devices = 6;
+}
+
+message RecordUsageRequest {
+  string user_id = 1;
+  string metric = 2;
+  uint64 amount = 3;
+}
+
+message RecordUsageResponse {
+  uint64 total = 1;
+}
+
+message IngestBillingWebhookRequest {
+  string provider = 1;
+  string event_id = 2;
+  string user_id = 3;
+  int64 amount_cents = 4;
+  string currency = 5;
+  string signature = 6;
+  string payload_json = 7;
+}
+
+message IngestBillingWebhookResponse {
+  bool accepted = 1;
+  bool duplicate = 2;
+  string invoice_id = 3;
+  string reason = 4;
+  string transaction_id = 5;
+}
+
+message GetSubscriptionRequest {
+  string user_id = 1;
+}
+
+message GetSubscriptionResponse {
+  string user_id = 1;
+  string plan = 2;
+  string status = 3;
+  int64 current_period_end = 4;
+}
+
+message UpsertSubscriptionRequest {
+  string user_id = 1;
+  string plan = 2;
+  string status = 3;
+  int64 current_period_end = 4;
+}
+
+message UpsertSubscriptionResponse {
+  bool duplicate = 1;
+  string user_id = 2;
+  string plan = 3;
+  string status = 4;
+  int64 current_period_end = 5;
+}
+
+message BillingPlan {
+  string plan_id = 1;
+  string plan_code = 2;
+  string name = 3;
+  string description = 4;
+  int32 priority = 5;
+  string interval = 6;
+  int64 price_cents = 7;
+  string currency = 8;
+  int32 device_limit = 9;
+  int64 storage_limit_bytes = 10;
+  int32 retention_days = 11;
+  string status = 12;
+  int64 created_at = 13;
+  int64 updated_at = 14;
+}
+
+message ListPlansRequest {
+  string status = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListPlansResponse {
+  repeated BillingPlan plans = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message CreatePlanRequest {
+  string plan_code = 1;
+  string name = 2;
+  string description = 3;
+  int32 priority = 4;
+  string interval = 5;
+  int64 price_cents = 6;
+  string currency = 7;
+  int32 device_limit = 8;
+  int64 storage_limit_bytes = 9;
+  int32 retention_days = 10;
+  string status = 11;
+}
+
+message CreatePlanResponse {
+  BillingPlan plan = 1;
+}
+
+message UpdatePlanRequest {
+  string plan_id = 1;
+  optional string plan_code = 2;
+  optional string name = 3;
+  optional string description = 4;
+  optional int32 priority = 5;
+  optional string interval = 6;
+  optional int64 price_cents = 7;
+  optional string currency = 8;
+  optional int32 device_limit = 9;
+  optional int64 storage_limit_bytes = 10;
+  optional int32 retention_days = 11;
+  optional string status = 12;
+}
+
+message UpdatePlanResponse {
+  BillingPlan plan = 1;
+}
+
+message DeletePlanRequest {
+  string plan_id = 1;
+}
+
+message DeletePlanResponse {
+  bool deleted = 1;
+  BillingPlan plan = 2;
+}
+
+message BillingSubscription {
+  string subscription_id = 1;
+  string subscription_code = 2;
+  string user_id = 3;
+  string plan_id = 4;
+  string plan_code = 5;
+  string status = 6;
+  int64 start_date = 7;
+  int64 end_date = 8;
+  bool auto_renew = 9;
+  int32 device_count = 10;
+  int64 created_at = 11;
+  int64 updated_at = 12;
+}
+
+message ListSubscriptionsRequest {
+  string user_id = 1;
+  string status = 2;
+  string plan_code = 3;
+  uint32 limit = 4;
+  string cursor = 5;
+}
+
+message ListSubscriptionsResponse {
+  repeated BillingSubscription subscriptions = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message CreateSubscriptionRequest {
+  string user_id = 1;
+  string plan_id = 2;
+  string plan_code = 3;
+  string status = 4;
+  int64 start_date = 5;
+  int64 end_date = 6;
+  optional bool auto_renew = 7;
+  optional int32 device_count = 8;
+}
+
+message CreateSubscriptionResponse {
+  BillingSubscription subscription = 1;
+}
+
+message UpdateSubscriptionRequest {
+  string subscription_id = 1;
+  optional string plan_id = 2;
+  optional string plan_code = 3;
+  optional string status = 4;
+  optional int64 end_date = 5;
+  optional bool auto_renew = 6;
+  optional int32 device_count = 7;
+}
+
+message UpdateSubscriptionResponse {
+  BillingSubscription subscription = 1;
+}
+
+message BillingTransaction {
+  string transaction_id = 1;
+  string user_id = 2;
+  string invoice_id = 3;
+  string status = 4;
+  int64 amount_cents = 5;
+  int64 refunded_amount_cents = 6;
+  string currency = 7;
+  string provider = 8;
+  string external_txn_id = 9;
+  int64 created_at = 10;
+  int64 updated_at = 11;
+}
+
+message BillingInvoice {
+  string invoice_id = 1;
+  string user_id = 2;
+  string status = 3;
+  int64 amount_cents = 4;
+  int64 refunded_amount_cents = 5;
+  string currency = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}
+
+message BillingLedgerEntry {
+  string ledger_id = 1;
+  string user_id = 2;
+  string transaction_id = 3;
+  string invoice_id = 4;
+  string entry_type = 5;
+  int64 amount_cents = 6;
+  string currency = 7;
+  string note = 8;
+  int64 created_at = 9;
+}
+
+message ListTransactionsRequest {
+  string user_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListTransactionsResponse {
+  repeated BillingTransaction transactions = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message ListInvoicesRequest {
+  string user_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListInvoicesResponse {
+  repeated BillingInvoice invoices = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message ListLedgerEntriesRequest {
+  string user_id = 1;
+  string transaction_id = 2;
+  uint32 limit = 3;
+  string cursor = 4;
+}
+
+message ListLedgerEntriesResponse {
+  repeated BillingLedgerEntry entries = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message RefundTransactionRequest {
+  string transaction_id = 1;
+  int64 amount_cents = 2;
+  string reason = 3;
+}
+
+message RefundTransactionResponse {
+  bool refunded = 1;
+  string reason = 2;
+  BillingTransaction transaction = 3;
+  BillingInvoice invoice = 4;
+  BillingLedgerEntry ledger_entry = 5;
+}
+
+// =============================================
+// Device-first billing messages (v2)
+// =============================================
+
+// --- Payment Methods ---
+
+message PaymentMethodInfo {
+  string id = 1;
+  string stripe_payment_method_id = 2;
+  string brand = 3;
+  string last4 = 4;
+  int32 exp_month = 5;
+  int32 exp_year = 6;
+  bool is_default = 7;
+  string status = 8;
+  int64 created_at = 9;
+}
+
+message ListPaymentMethodsRequest {
+  string user_id = 1;
+}
+
+message ListPaymentMethodsResponse {
+  repeated PaymentMethodInfo payment_methods = 1;
+}
+
+message CreateSetupIntentRequest {
+  string user_id = 1;
+}
+
+message CreateSetupIntentResponse {
+  string client_secret = 1;
+  string stripe_customer_id = 2;
+}
+
+message AddPaymentMethodRequest {
+  string user_id = 1;
+  string stripe_payment_method_id = 2;
+  bool set_as_default = 3;
+}
+
+message AddPaymentMethodResponse {
+  PaymentMethodInfo payment_method = 1;
+}
+
+message SetDefaultPaymentMethodRequest {
+  string user_id = 1;
+  string payment_method_id = 2;
+}
+
+message SetDefaultPaymentMethodResponse {
+  bool success = 1;
+}
+
+message RemovePaymentMethodRequest {
+  string user_id = 1;
+  string payment_method_id = 2;
+}
+
+message RemovePaymentMethodResponse {
+  bool success = 1;
+}
+
+// --- Subscription Plans ---
+
+message SubscriptionPlanInfo {
+  string id = 1;
+  string display_ref = 2;
+  string code = 3;
+  string name = 4;
+  string description = 5;
+  string billing_interval = 6;
+  int32 price_cents = 7;
+  string currency = 8;
+  int32 trial_days = 9;
+  bool is_active = 10;
+  int64 created_at = 11;
+}
+
+message ListSubscriptionPlansRequest {}
+
+message ListSubscriptionPlansResponse {
+  repeated SubscriptionPlanInfo plans = 1;
+}
+
+message GetSubscriptionPlanRequest {
+  string plan_id = 1;
+}
+
+message GetSubscriptionPlanResponse {
+  SubscriptionPlanInfo plan = 1;
+}
+
+// --- Device Subscriptions ---
+
+message DeviceSubscriptionInfo {
+  string id = 1;
+  string display_ref = 2;
+  string user_id = 3;
+  string device_id = 4;
+  string plan_id = 5;
+  string plan_code = 6;
+  string plan_name = 7;
+  string status = 8;
+  int32 price_cents = 9;
+  string currency = 10;
+  string billing_interval = 11;
+  int64 current_period_start = 12;
+  int64 current_period_end = 13;
+  bool cancel_at_period_end = 14;
+  int64 canceled_at = 15;
+  int64 grace_period_ends_at = 16;
+  int64 created_at = 17;
+  int64 updated_at = 18;
+}
+
+message ListDeviceSubscriptionsRequest {
+  string user_id = 1;
+}
+
+message ListDeviceSubscriptionsResponse {
+  repeated DeviceSubscriptionInfo subscriptions = 1;
+}
+
+message GetDeviceSubscriptionRequest {
+  string user_id = 1;
+  string device_id = 2;
+}
+
+message GetDeviceSubscriptionResponse {
+  DeviceSubscriptionInfo subscription = 1;
+}
+
+message CreateDeviceSubscriptionRequest {
+  string user_id = 1;
+  string device_id = 2;
+  string plan_id = 3;
+  string payment_method_id = 4;
+}
+
+message CreateDeviceSubscriptionResponse {
+  DeviceSubscriptionInfo subscription = 1;
+  string stripe_subscription_id = 2;
+}
+
+message CancelDeviceSubscriptionRequest {
+  string user_id = 1;
+  string subscription_id = 2;
+  bool cancel_immediately = 3;
+}
+
+message CancelDeviceSubscriptionResponse {
+  DeviceSubscriptionInfo subscription = 1;
+}
+
+message ResumeDeviceSubscriptionRequest {
+  string user_id = 1;
+  string subscription_id = 2;
+}
+
+message ResumeDeviceSubscriptionResponse {
+  DeviceSubscriptionInfo subscription = 1;
+}
+
+// --- Invoices v2 ---
+
+message InvoiceV2Info {
+  string id = 1;
+  string display_ref = 2;
+  string user_id = 3;
+  string device_id = 4;
+  string subscription_id = 5;
+  string status = 6;
+  string currency = 7;
+  int32 subtotal_cents = 8;
+  int32 tax_cents = 9;
+  string tax_rate = 10;
+  string tax_region = 11;
+  int32 total_cents = 12;
+  string payment_method_brand = 13;
+  string payment_method_last4 = 14;
+  int64 invoice_date = 15;
+  int64 due_date = 16;
+  int64 paid_at = 17;
+  int64 created_at = 18;
+  repeated InvoiceItemInfo items = 19;
+}
+
+message InvoiceItemInfo {
+  string id = 1;
+  string description = 2;
+  int32 quantity = 3;
+  int32 unit_price_cents = 4;
+  int32 total_price_cents = 5;
+}
+
+message ListInvoicesV2Request {
+  string user_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListInvoicesV2Response {
+  repeated InvoiceV2Info invoices = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message GetInvoiceV2Request {
+  string user_id = 1;
+  string invoice_id = 2;
+}
+
+message GetInvoiceV2Response {
+  InvoiceV2Info invoice = 1;
+}
+
+message GetInvoiceHtmlRequest {
+  string user_id = 1;
+  string invoice_id = 2;
+}
+
+message GetInvoiceHtmlResponse {
+  string html = 1;
+}
+
+message RetryInvoicePaymentRequest {
+  string user_id = 1;
+  string invoice_id = 2;
+}
+
+message RetryInvoicePaymentResponse {
+  bool success = 1;
+  string status = 2;
+}
+
+// --- Billing Summary ---
+
+message GetBillingSummaryRequest {
+  string user_id = 1;
+}
+
+message DeviceBillingStatus {
+  string device_id = 1;
+  string device_name = 2;
+  string subscription_status = 3;
+  string plan_name = 4;
+  int32 price_cents = 5;
+  string billing_interval = 6;
+  int64 next_billing_date = 7;
+}
+
+message GetBillingSummaryResponse {
+  int32 total_devices = 1;
+  int32 active_subscriptions = 2;
+  int32 past_due_subscriptions = 3;
+  string default_payment_brand = 4;
+  string default_payment_last4 = 5;
+  repeated DeviceBillingStatus devices = 6;
+}
+
+// --- Refunds (admin-only) ---
+
+message RefundInfo {
+  string id = 1;
+  string display_ref = 2;
+  string invoice_id = 3;
+  string user_id = 4;
+  string admin_user_id = 5;
+  int32 amount_cents = 6;
+  string currency = 7;
+  string reason = 8;
+  string status = 9;
+  int64 created_at = 10;
+}
+
+message CreateRefundRequest {
+  string admin_user_id = 1;
+  string invoice_id = 2;
+  int32 amount_cents = 3;
+  string reason = 4;
+}
+
+message CreateRefundResponse {
+  RefundInfo refund = 1;
+}
+
+message ListRefundsByInvoiceRequest {
+  string invoice_id = 1;
+}
+
+message ListRefundsByInvoiceResponse {
+  repeated RefundInfo refunds = 1;
+  int32 total_refunded_cents = 2;
+}

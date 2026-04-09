@@ -1,0 +1,448 @@
+syntax = "proto3";
+
+package wildon.auth.v1;
+
+service AuthService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc IssueToken(IssueTokenRequest) returns (IssueTokenResponse);
+  rpc ValidateAccessToken(ValidateAccessTokenRequest) returns (ValidateAccessTokenResponse);
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+  rpc RequestEmailVerificationOtp(RequestEmailVerificationOtpRequest) returns (RequestEmailVerificationOtpResponse);
+  rpc ConfirmEmailVerificationOtp(ConfirmEmailVerificationOtpRequest) returns (ConfirmEmailVerificationOtpResponse);
+  rpc LoginWithPassword(LoginWithPasswordRequest) returns (IssueTokenResponse);
+  rpc VerifyLoginMfa(VerifyLoginMfaRequest) returns (IssueTokenResponse);
+  rpc RefreshToken(RefreshTokenRequest) returns (IssueTokenResponse);
+  rpc LogoutSession(LogoutSessionRequest) returns (LogoutSessionResponse);
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+  rpc LogoutSessionById(LogoutSessionByIdRequest) returns (LogoutSessionByIdResponse);
+  rpc LogoutAllSessions(LogoutAllSessionsRequest) returns (LogoutAllSessionsResponse);
+  rpc GetMfaStatus(GetMfaStatusRequest) returns (GetMfaStatusResponse);
+  rpc BeginAuthenticatorEnrollment(BeginAuthenticatorEnrollmentRequest) returns (BeginAuthenticatorEnrollmentResponse);
+  rpc ConfirmAuthenticatorEnrollment(ConfirmAuthenticatorEnrollmentRequest) returns (ConfirmAuthenticatorEnrollmentResponse);
+  rpc DisableMfaFactor(DisableMfaFactorRequest) returns (DisableMfaFactorResponse);
+  rpc RegenerateBackupCodes(RegenerateBackupCodesRequest) returns (RegenerateBackupCodesResponse);
+  rpc RequestPasswordResetOtp(RequestPasswordResetOtpRequest) returns (RequestPasswordResetOtpResponse);
+  rpc VerifyPasswordResetOtp(VerifyPasswordResetOtpRequest) returns (VerifyPasswordResetOtpResponse);
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+  rpc GetOidcDiscovery(OidcDiscoveryRequest) returns (OidcDiscoveryResponse);
+  rpc GetJwks(JwksRequest) returns (JwksResponse);
+  rpc AuthorizeOauth(OAuthAuthorizeRequest) returns (OAuthAuthorizeResponse);
+  rpc ExchangeOauthToken(OAuthTokenExchangeRequest) returns (OAuthTokenExchangeResponse);
+  rpc GetUserInfo(UserInfoRequest) returns (UserInfoResponse);
+  rpc RevokeOauthToken(OAuthRevokeRequest) returns (OAuthRevokeResponse);
+  rpc IntrospectOauthToken(OAuthIntrospectRequest) returns (OAuthIntrospectResponse);
+  rpc SocialLoginGoogle(SocialLoginGoogleRequest) returns (IssueTokenResponse);
+  rpc SocialLoginApple(SocialLoginAppleRequest) returns (IssueTokenResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+message IssueTokenRequest {
+  string sub = 1;
+  string aud = 2;
+  string realm = 3;
+  string device_id = 4;
+  string device_fingerprint_hash = 5;
+  string user_agent = 6;
+  string ip_address = 7;
+  int32 mfa_level = 8;
+  string client_id = 9;
+  optional bool remember_me = 10;
+}
+
+message IssueTokenResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int64 expires_at = 3;
+  string refresh_token = 4;
+  string session_id = 5;
+  int64 refresh_expires_at = 6;
+  int32 session_version = 7;
+  bool mfa_required = 8;
+  string mfa_challenge_token = 9;
+  string mfa_method = 10;
+}
+
+message ValidateAccessTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateAccessTokenResponse {
+  bool active = 1;
+  string reason = 2;
+  int32 current_session_version = 3;
+  string session_id = 4;
+}
+
+message RegisterUserRequest {
+  string email = 1;
+  string password = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string middle_name = 5;
+}
+
+message RegisterUserResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message RequestEmailVerificationOtpRequest {
+  string email = 1;
+}
+
+message RequestEmailVerificationOtpResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message ConfirmEmailVerificationOtpRequest {
+  string email = 1;
+  string otp_code = 2;
+}
+
+message ConfirmEmailVerificationOtpResponse {
+  bool verified = 1;
+  string message = 2;
+}
+
+message LoginWithPasswordRequest {
+  string email = 1;
+  string password = 2;
+  string aud = 3;
+  string realm = 4;
+  string device_id = 5;
+  string device_fingerprint_hash = 6;
+  string user_agent = 7;
+  string ip_address = 8;
+  int32 mfa_level = 9;
+  string client_id = 10;
+  optional bool remember_me = 11;
+}
+
+message VerifyLoginMfaRequest {
+  string challenge_token = 1;
+  string otp_code = 2;
+  string factor_type = 3;
+}
+
+message RefreshTokenRequest {
+  string refresh_token = 1;
+  string device_id = 2;
+}
+
+message LogoutSessionRequest {
+  string refresh_token = 1;
+  string reason = 2;
+}
+
+message LogoutSessionResponse {
+  bool revoked = 1;
+  string message = 2;
+}
+
+message ListSessionsRequest {
+  uint32 limit = 1;
+  string cursor = 2;
+}
+
+message SessionSummary {
+  string session_id = 1;
+  string aud = 2;
+  string realm = 3;
+  string client_id = 4;
+  string device_id = 5;
+  bool remember_me = 6;
+  string ip_address = 7;
+  string user_agent = 8;
+  int64 created_at = 9;
+  int64 last_activity_at = 10;
+  int64 expires_at = 11;
+  int64 revoked_at = 12;
+  string revoked_reason = 13;
+  int32 mfa_level = 14;
+}
+
+message ListSessionsResponse {
+  repeated SessionSummary sessions = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message LogoutSessionByIdRequest {
+  string session_id = 1;
+  string reason = 2;
+}
+
+message LogoutSessionByIdResponse {
+  bool revoked = 1;
+  string message = 2;
+}
+
+message LogoutAllSessionsRequest {
+  string reason = 1;
+}
+
+message LogoutAllSessionsResponse {
+  int32 session_version = 1;
+  int64 revoked_sessions = 2;
+}
+
+message GetMfaStatusRequest {}
+
+message MfaFactorSummary {
+  string factor_type = 1;
+  string status = 2;
+  int64 enabled_at = 3;
+  string masked_destination = 4;
+  int32 backup_codes_remaining = 5;
+}
+
+message GetMfaStatusResponse {
+  bool mfa_enabled = 1;
+  repeated MfaFactorSummary factors = 2;
+}
+
+message BeginAuthenticatorEnrollmentRequest {
+  string issuer = 1;
+}
+
+message BeginAuthenticatorEnrollmentResponse {
+  string factor_type = 1;
+  string factor_id = 2;
+  string issuer = 3;
+  string account_name = 4;
+  string secret = 5;
+  string otpauth_uri = 6;
+  string qr_svg_data_uri = 7;
+}
+
+message ConfirmAuthenticatorEnrollmentRequest {
+  string otp_code = 1;
+}
+
+message ConfirmAuthenticatorEnrollmentResponse {
+  bool enabled = 1;
+  string message = 2;
+  repeated string backup_codes = 3;
+}
+
+message DisableMfaFactorRequest {
+  string factor_type = 1;
+  string otp_code = 2;
+}
+
+message DisableMfaFactorResponse {
+  bool disabled = 1;
+  string message = 2;
+}
+
+message RegenerateBackupCodesRequest {
+  string otp_code = 1;
+}
+
+message RegenerateBackupCodesResponse {
+  bool regenerated = 1;
+  string message = 2;
+  repeated string backup_codes = 3;
+}
+
+message RequestPasswordResetOtpRequest {
+  string email = 1;
+}
+
+message RequestPasswordResetOtpResponse {
+  bool accepted = 1;
+  string message = 2;
+}
+
+message VerifyPasswordResetOtpRequest {
+  string email = 1;
+  string otp_code = 2;
+}
+
+message VerifyPasswordResetOtpResponse {
+  bool accepted = 1;
+  string reset_token = 2;
+  string message = 3;
+}
+
+message ResetPasswordRequest {
+  string email = 1;
+  string reset_token = 2;
+  string new_password = 3;
+}
+
+message ResetPasswordResponse {
+  bool reset = 1;
+  string message = 2;
+}
+
+message ChangePasswordRequest {
+  string current_password = 1;
+  string new_password = 2;
+}
+
+message ChangePasswordResponse {
+  bool changed = 1;
+  string message = 2;
+}
+
+message OidcDiscoveryRequest {}
+
+message OidcDiscoveryResponse {
+  string issuer = 1;
+  string authorization_endpoint = 2;
+  string token_endpoint = 3;
+  string userinfo_endpoint = 4;
+  string jwks_uri = 5;
+  string revocation_endpoint = 6;
+  string introspection_endpoint = 7;
+  repeated string grant_types_supported = 8;
+  repeated string response_types_supported = 9;
+  repeated string code_challenge_methods_supported = 10;
+  repeated string token_endpoint_auth_methods_supported = 11;
+}
+
+message JwksRequest {}
+
+message Jwk {
+  string kty = 1;
+  string use_ = 2;
+  string alg = 3;
+  string kid = 4;
+  string k = 5;
+}
+
+message JwksResponse {
+  repeated Jwk keys = 1;
+}
+
+message OAuthAuthorizeRequest {
+  string response_type = 1;
+  string client_id = 2;
+  string redirect_uri = 3;
+  string scope = 4;
+  string state = 5;
+  string nonce = 6;
+  string code_challenge = 7;
+  string code_challenge_method = 8;
+  string aud = 9;
+  string realm = 10;
+  string sub = 11;
+  string device_id = 12;
+  string device_fingerprint_hash = 13;
+  string user_agent = 14;
+  string ip_address = 15;
+}
+
+message OAuthAuthorizeResponse {
+  string code = 1;
+  string state = 2;
+  string redirect_uri = 3;
+  int64 expires_at = 4;
+}
+
+message OAuthTokenExchangeRequest {
+  string grant_type = 1;
+  string code = 2;
+  string redirect_uri = 3;
+  string code_verifier = 4;
+  string refresh_token = 5;
+  string client_id = 6;
+  string client_secret = 7;
+  string scope = 8;
+}
+
+message OAuthTokenExchangeResponse {
+  string access_token = 1;
+  string token_type = 2;
+  int64 expires_at = 3;
+  string refresh_token = 4;
+  string session_id = 5;
+  int64 refresh_expires_at = 6;
+  int32 session_version = 7;
+  string id_token = 8;
+  string scope = 9;
+}
+
+message UserInfoRequest {
+  string access_token = 1;
+}
+
+message UserInfoResponse {
+  string sub = 1;
+  string email = 2;
+  bool email_verified = 3;
+  string name = 4;
+  string client_id = 5;
+  string aud = 6;
+  string realm = 7;
+  repeated string scopes = 8;
+}
+
+message OAuthRevokeRequest {
+  string token = 1;
+  string token_type_hint = 2;
+  string client_id = 3;
+  string client_secret = 4;
+}
+
+message OAuthRevokeResponse {
+  bool revoked = 1;
+}
+
+message OAuthIntrospectRequest {
+  string token = 1;
+  string token_type_hint = 2;
+}
+
+message OAuthIntrospectResponse {
+  bool active = 1;
+  string sub = 2;
+  string client_id = 3;
+  string aud = 4;
+  string realm = 5;
+  int64 exp = 6;
+  int64 iat = 7;
+  string scope = 8;
+  string token_type = 9;
+}
+
+message SocialLoginGoogleRequest {
+  string id_token = 1;
+  string nonce = 2;
+  string aud = 3;
+  string realm = 4;
+  string client_id = 5;
+  string email = 6;
+  string first_name = 7;
+  string last_name = 8;
+  string device_id = 9;
+  string device_fingerprint_hash = 10;
+  string user_agent = 11;
+  string ip_address = 12;
+  optional bool remember_me = 13;
+}
+
+message SocialLoginAppleRequest {
+  string id_token = 1;
+  string nonce = 2;
+  string aud = 3;
+  string realm = 4;
+  string client_id = 5;
+  string email = 6;
+  string first_name = 7;
+  string last_name = 8;
+  string device_id = 9;
+  string device_fingerprint_hash = 10;
+  string user_agent = 11;
+  string ip_address = 12;
+  optional bool remember_me = 13;
+}

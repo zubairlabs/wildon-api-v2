@@ -1,0 +1,1 @@
+-- no-op rollback for data bootstrap migration

@@ -1,0 +1,229 @@
+syntax = "proto3";
+
+package wildon.users.v1;
+
+service UsersService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+  rpc GetUserAuthState(GetUserAuthStateRequest) returns (GetUserAuthStateResponse);
+  rpc UpdateUserRoles(UpdateUserRolesRequest) returns (UpdateUserRolesResponse);
+  rpc UpdateUserScopes(UpdateUserScopesRequest) returns (UpdateUserScopesResponse);
+  rpc DisableUser(DisableUserRequest) returns (DisableUserResponse);
+  rpc BumpPermRevision(BumpPermRevisionRequest) returns (BumpPermRevisionResponse);
+  rpc GetUserSettings(GetUserSettingsRequest) returns (GetUserSettingsResponse);
+  rpc UpdateUserSettings(UpdateUserSettingsRequest) returns (UpdateUserSettingsResponse);
+  rpc UpdateUserNotificationSettings(UpdateUserNotificationSettingsRequest) returns (UpdateUserNotificationSettingsResponse);
+  rpc CreateProfilePhotoUploadTicket(CreateProfilePhotoUploadTicketRequest) returns (CreateProfilePhotoUploadTicketResponse);
+  rpc CreateProfilePhotoDownloadUrl(CreateProfilePhotoDownloadUrlRequest) returns (CreateProfilePhotoDownloadUrlResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+message UserRecord {
+  string user_id = 1;
+  string email = 2;
+  string status = 3;
+  repeated string roles = 4;
+  int64 perm_rev = 5;
+  int64 created_at = 6;
+  int64 updated_at = 7;
+  repeated string scopes = 8;
+  string account_number = 9;
+}
+
+message CreateUserRequest {
+  string user_id = 1;
+  string email = 2;
+  string first_name = 3;
+  string last_name = 4;
+  string middle_name = 5;
+}
+
+message CreateUserResponse {
+  UserRecord user = 1;
+}
+
+message GetUserAuthStateRequest {
+  string user_id = 1;
+}
+
+message GetUserAuthStateResponse {
+  string user_id = 1;
+  string status = 2;
+  repeated string roles = 3;
+  int64 perm_rev = 4;
+  repeated string scopes = 5;
+}
+
+message UpdateUserRolesRequest {
+  string user_id = 1;
+  repeated string roles = 2;
+}
+
+message UpdateUserRolesResponse {
+  string user_id = 1;
+  repeated string roles = 2;
+  int64 perm_rev = 3;
+}
+
+message UpdateUserScopesRequest {
+  string user_id = 1;
+  repeated string scopes = 2;
+}
+
+message UpdateUserScopesResponse {
+  string user_id = 1;
+  repeated string scopes = 2;
+  int64 perm_rev = 3;
+}
+
+message DisableUserRequest {
+  string user_id = 1;
+  string reason = 2;
+}
+
+message DisableUserResponse {
+  string user_id = 1;
+  string status = 2;
+  int64 perm_rev = 3;
+}
+
+message BumpPermRevisionRequest {
+  string user_id = 1;
+  string reason = 2;
+}
+
+message BumpPermRevisionResponse {
+  string user_id = 1;
+  int64 perm_rev = 2;
+}
+
+message UserNotificationSettings {
+  bool push_new_photo_captured = 1;
+  bool push_species_detected = 2;
+  bool push_device_offline = 3;
+  bool push_low_battery = 4;
+  bool push_storage_full = 5;
+  bool push_subscription_renewal_reminder = 6;
+  bool push_trip_activity_updates = 7;
+  bool email_new_photo_captured = 8;
+  bool email_species_detected = 9;
+  bool email_device_offline = 10;
+  bool email_low_battery = 11;
+  bool email_storage_full = 12;
+  bool email_subscription_renewal_reminder = 13;
+  bool email_trip_activity_updates = 14;
+  int64 updated_at = 15;
+}
+
+message UserSettings {
+  string user_id = 1;
+  string email = 2;
+  string full_name = 3;
+  string username = 4;
+  string phone = 5;
+  string profile_photo_object_key = 6;
+  string bio = 7;
+  string language = 8;
+  string timezone = 9;
+  string date_format = 10;
+  string clock_format = 11;
+  string distance_unit = 12;
+  string temperature_unit = 13;
+  int32 settings_version = 14;
+  int64 settings_updated_at = 15;
+  UserNotificationSettings notifications = 16;
+  string account_number = 17;
+  string first_name = 18;
+  string last_name = 19;
+  string middle_name = 20;
+  string preferred_name = 21;
+  string display_name = 22;
+}
+
+message GetUserSettingsRequest {
+  string user_id = 1;
+}
+
+message GetUserSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message UpdateUserSettingsRequest {
+  string user_id = 1;
+  optional string full_name = 2;
+  optional string username = 3;
+  optional string phone = 4;
+  optional string profile_photo_object_key = 5;
+  optional string bio = 6;
+  optional string language = 7;
+  optional string timezone = 8;
+  optional string date_format = 9;
+  optional string clock_format = 10;
+  optional string distance_unit = 11;
+  optional string temperature_unit = 12;
+  optional string first_name = 13;
+  optional string last_name = 14;
+  optional string middle_name = 15;
+  optional string preferred_name = 16;
+  optional string display_name = 17;
+}
+
+message UpdateUserSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message UpdateUserNotificationSettingsRequest {
+  string user_id = 1;
+  optional bool push_new_photo_captured = 2;
+  optional bool push_species_detected = 3;
+  optional bool push_device_offline = 4;
+  optional bool push_low_battery = 5;
+  optional bool push_storage_full = 6;
+  optional bool push_subscription_renewal_reminder = 7;
+  optional bool push_trip_activity_updates = 8;
+  optional bool email_new_photo_captured = 9;
+  optional bool email_species_detected = 10;
+  optional bool email_device_offline = 11;
+  optional bool email_low_battery = 12;
+  optional bool email_storage_full = 13;
+  optional bool email_subscription_renewal_reminder = 14;
+  optional bool email_trip_activity_updates = 15;
+}
+
+message UpdateUserNotificationSettingsResponse {
+  UserSettings settings = 1;
+}
+
+message CreateProfilePhotoUploadTicketRequest {
+  string user_id = 1;
+  string content_type = 2;
+  uint64 content_length = 3;
+}
+
+message CreateProfilePhotoUploadTicketResponse {
+  string object_key = 1;
+  string upload_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+  map<string, string> required_headers = 5;
+  string content_type = 6;
+  uint64 max_bytes = 7;
+}
+
+message CreateProfilePhotoDownloadUrlRequest {
+  string user_id = 1;
+  string object_key = 2;
+}
+
+message CreateProfilePhotoDownloadUrlResponse {
+  string object_key = 1;
+  string download_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+}

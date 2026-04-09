@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-clients-service
+  namespace: wildon
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: api-clients-service
+  template:
+    metadata:
+      labels:
+        app: api-clients-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: api-clients-service
+          image: ghcr.io/zubairlabs/wildon-api-v2/api-clients-service:latest
+          imagePullPolicy: Always
+          env:
+            - name: API_CLIENTS_GRPC_BIND_ADDR
+              value: "0.0.0.0:50058"
+            - name: API_CLIENTS_REQUIRE_NATS_INVALIDATION
+              value: "false"
+            - name: INTERNAL_CALLER_SERVICE
+              value: "api-clients-service"
+            - name: INTERNAL_TLS_ENABLE_CLIENT
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_SERVER_TLS
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_CLIENT_AUTH
+              value: "true"
+            - name: INTERNAL_AUTH_REQUIRE_MTLS
+              value: "true"
+            - name: INTERNAL_AUTH_SPIFFE_PREFIX
+              value: "spiffe://wildon.internal/service/"
+            - name: INTERNAL_TLS_CA_CERT_PATH
+              value: "/var/run/wildon/pki/ca.crt"
+            - name: INTERNAL_TLS_SERVER_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_SERVER_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+            - name: INTERNAL_TLS_CLIENT_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_CLIENT_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+          volumeMounts:
+            - name: internal-grpc-tls
+              mountPath: /var/run/wildon/pki
+              readOnly: true
+          ports:
+            - containerPort: 50058
+      volumes:
+        - name: internal-grpc-tls
+          secret:
+            secretName: api-clients-service-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-clients-service
+  namespace: wildon
+spec:
+  selector:
+    app: api-clients-service
+  ports:
+    - name: grpc
+      port: 50058
+      targetPort: 50058

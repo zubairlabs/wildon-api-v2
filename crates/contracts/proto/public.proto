@@ -1,0 +1,147 @@
+syntax = "proto3";
+
+package wildon.public.v1;
+
+service PublicService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc GetDashboardSummary(GetDashboardSummaryRequest) returns (GetDashboardSummaryResponse);
+  rpc GetProfile(GetProfileRequest) returns (GetProfileResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc CreateDevice(CreateDeviceRequest) returns (CreateDeviceResponse);
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  rpc CreateMediaUploadTicket(CreateMediaUploadTicketRequest) returns (CreateMediaUploadTicketResponse);
+  rpc CreateExportJob(CreateExportJobRequest) returns (CreateExportJobResponse);
+  rpc GetExportJob(GetExportJobRequest) returns (GetExportJobResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+message UserProfile {
+  string user_id = 1;
+  string email = 2;
+  string display_name = 3;
+  int64 updated_at = 4;
+  string timezone = 5;
+  string first_name = 6;
+  string last_name = 7;
+  string middle_name = 8;
+  string preferred_name = 9;
+  string full_name = 10;
+}
+
+message Device {
+  string device_id = 1;
+  string platform = 2;
+  string nickname = 3;
+  int64 created_at = 4;
+}
+
+message GetDashboardSummaryRequest {
+  string user_id = 1;
+}
+
+message GetDashboardSummaryResponse {
+  string user_id = 1;
+  uint32 devices_count = 2;
+  uint32 trips_count = 3;
+  uint32 media_count = 4;
+  string subscription_plan = 5;
+  string subscription_status = 6;
+  uint64 ai_usage_total = 7;
+  int64 generated_at = 8;
+}
+
+message GetProfileRequest {
+  string user_id = 1;
+}
+
+message GetProfileResponse {
+  UserProfile profile = 1;
+}
+
+message UpdateProfileRequest {
+  string user_id = 1;
+  string display_name = 2;
+  string feature_key = 3;
+  string idempotency_key = 4;
+  string timezone = 5;
+  string first_name = 6;
+  string last_name = 7;
+  string middle_name = 8;
+  string preferred_name = 9;
+}
+
+message UpdateProfileResponse {
+  UserProfile profile = 1;
+  bool event_published = 2;
+  bool event_duplicate = 3;
+}
+
+message CreateDeviceRequest {
+  string user_id = 1;
+  string platform = 2;
+  string nickname = 3;
+}
+
+message CreateDeviceResponse {
+  Device device = 1;
+}
+
+message ListDevicesRequest {
+  string user_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListDevicesResponse {
+  repeated Device devices = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message CreateMediaUploadTicketRequest {
+  string user_id = 1;
+  string filename = 2;
+  string content_type = 3;
+  uint64 content_length = 4;
+}
+
+message CreateMediaUploadTicketResponse {
+  string object_key = 1;
+  string upload_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+}
+
+message CreateExportJobRequest {
+  string user_id = 1;
+  string export_kind = 2;
+  string format = 3;
+  string idempotency_key = 4;
+}
+
+message CreateExportJobResponse {
+  string job_id = 1;
+  string status = 2;
+  string artifact_key = 3;
+  bool duplicate = 4;
+}
+
+message GetExportJobRequest {
+  string user_id = 1;
+  string job_id = 2;
+}
+
+message GetExportJobResponse {
+  string job_id = 1;
+  string status = 2;
+  string artifact_key = 3;
+  string download_url = 4;
+  int64 download_expires_at = 5;
+  string error_message = 6;
+}

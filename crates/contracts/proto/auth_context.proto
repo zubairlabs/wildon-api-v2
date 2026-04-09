@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package wildon.auth_context.v1;
+
+import "common.proto";
+
+message AuthContext {
+  string sub = 1;
+  string subject_type = 2;
+  string cid = 3;
+  wildon.common.v1.Audience aud = 4;
+  wildon.common.v1.Realm realm = 5;
+  int64 sv = 6;
+  int64 perm_rev = 7;
+  string jti = 8;
+  int64 exp = 9;
+  int64 iat = 10;
+
+  string sid = 11;
+  repeated string amr = 12;
+  string device_id = 13;
+  repeated string roles = 14;
+  repeated string scopes = 15;
+
+  string request_id = 16;
+  string trace_id = 17;
+}

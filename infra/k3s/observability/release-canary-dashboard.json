@@ -1,0 +1,31 @@
+{
+  "title": "Wildon Release Canary",
+  "description": "Canary rollout health and rollback indicators",
+  "panels": [
+    {
+      "title": "Gateway Latency p95",
+      "metric": "http_request_duration_seconds",
+      "stat": "p95",
+      "filter": {
+        "service": "gateway-service"
+      }
+    },
+    {
+      "title": "Auth Failures",
+      "metric": "security_events_total",
+      "filter": {
+        "event_type": "login_failed"
+      }
+    },
+    {
+      "title": "Upstream Availability",
+      "metric": "grpc_requests_total",
+      "group_by": ["service", "code"]
+    },
+    {
+      "title": "Rate Limit Pressure",
+      "metric": "rate_limit_hits_total",
+      "group_by": ["route", "dimension"]
+    }
+  ]
+}

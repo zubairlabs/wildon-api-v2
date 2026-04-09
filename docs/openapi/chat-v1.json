@@ -1,0 +1,280 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Wildon Chat API",
+    "version": "v1",
+    "description": "Real-time live chat service. Provides a WebSocket endpoint for queue-based support conversations and REST endpoints for session management and history. Agents connect from the control app (`aud: control`); users connect from the my app or mobile (`aud: public`/`platform`)."
+  },
+  "servers": [
+    {
+      "url": "https://api.wildon.com.au",
+      "description": "Production (routed via ingress)"
+    },
+    {
+      "url": "http://localhost:8082",
+      "description": "Local chat-service"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Liveness probe."
+    },
+    {
+      "name": "WebSocket",
+      "description": "Real-time WebSocket connection. Authenticate via `?token=<jwt>` query parameter. On connection the server determines the role from the JWT audience (`control` = agent, `public`/`platform` = user) and routes accordingly."
+    },
+    {
+      "name": "Sessions",
+      "description": "Chat session management and history."
+    },
+    {
+      "name": "Queue",
+      "description": "Live queue snapshot."
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "operationId": "chatHealth",
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ws/chat": {
+      "get": {
+        "tags": ["WebSocket"],
+        "summary": "WebSocket — live chat connection",
+        "operationId": "chatWebSocket",
+        "description": "Upgrade this HTTP GET to a WebSocket connection. Pass the JWT access token as `?token=<jwt>`.\n\n**User connection flow:**\n1. Server creates or resumes a `live_chat_sessions` row with `status=waiting`.\n2. Server sends `queue_pos` event with the user's position.\n3. When an agent claims the session the server sends `assigned`.\n4. Both parties exchange `send_message` / `message` events.\n5. Either party sends `close_session`; server auto-saves the transcript as a support ticket and sends `closed`.\n\n**Agent connection flow:**\n1. Server sends `queue_update` with all waiting sessions.\n2. Agent sends `claim_session` to accept a waiting user (max 3 concurrent).\n3. Agent sends `close_session` to end a session.\n\n**Client → Server message types** (JSON, `{\"type\":\"...\", ...}`):\n- `send_message` — `{ session_id, content }`\n- `typing` — `{ session_id }`\n- `claim_session` — `{ session_id }` *(agents only)*\n- `close_session` — `{ session_id }`\n\n**Server → Client event types** (JSON, `{\"type\":\"...\", ...}`):\n- `message` — `{ session_id, msg_id, sender_id, sender_type, content, sent_at }`\n- `typing` — `{ session_id, sender_id }`\n- `queue_pos` — `{ session_id, position }` *(users)*\n- `assigned` — `{ session_id, agent_id, agent_name }`\n- `closed` — `{ session_id, ticket_id? }`\n- `queue_update` — `{ sessions: QueueEntry[] }` *(agents)*\n- `error` — `{ message }`",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "JWT access token (from auth-service). Audience must be `public`, `platform`, or `control`."
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching Protocols — WebSocket connection established"
+          },
+          "401": {
+            "description": "Missing or invalid token"
+          }
+        }
+      }
+    },
+    "/v1/chat/sessions": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "List chat sessions",
+        "operationId": "listChatSessions",
+        "description": "Returns a paginated list of chat sessions. Agents see all sessions; users see only their own.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["waiting", "active", "closed"]
+            },
+            "description": "Filter by session status."
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": { "type": "string" },
+            "description": "Filter by user ID."
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "default": 1 }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 20 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated session list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ListSessionsResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/chat/sessions/{session_id}": {
+      "get": {
+        "tags": ["Sessions"],
+        "summary": "Get session detail",
+        "operationId": "getChatSession",
+        "description": "Returns full session detail including all messages.",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "example": "CHAT-a1b2c3d4e5f6"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session detail with messages",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SessionDetailResponse" }
+              }
+            }
+          },
+          "404": {
+            "description": "Session not found"
+          }
+        }
+      }
+    },
+    "/v1/chat/queue": {
+      "get": {
+        "tags": ["Queue"],
+        "summary": "Get current waiting queue",
+        "operationId": "getChatQueue",
+        "description": "Returns all sessions currently in `waiting` status, ordered by queue position.",
+        "responses": {
+          "200": {
+            "description": "Ordered list of waiting sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/QueueEntry" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "example": "ok" }
+        }
+      },
+      "QueueEntry": {
+        "type": "object",
+        "required": ["session_id", "user_id", "queue_position", "created_at"],
+        "properties": {
+          "session_id": { "type": "string", "example": "CHAT-a1b2c3d4e5f6" },
+          "user_id": { "type": "string" },
+          "user_name": { "type": "string", "nullable": true },
+          "queue_position": { "type": "integer", "example": 1 },
+          "created_at": { "type": "integer", "format": "int64", "description": "Unix timestamp" }
+        }
+      },
+      "SessionSummary": {
+        "type": "object",
+        "required": ["session_id", "user_id", "status", "created_at"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "user_id": { "type": "string" },
+          "user_name": { "type": "string", "nullable": true },
+          "status": {
+            "type": "string",
+            "enum": ["waiting", "active", "closed"]
+          },
+          "queue_position": { "type": "integer", "nullable": true },
+          "agent_id": { "type": "string", "nullable": true },
+          "agent_name": { "type": "string", "nullable": true },
+          "ticket_id": { "type": "string", "nullable": true, "description": "Linked support ticket ID if session was saved." },
+          "created_at": { "type": "integer", "format": "int64" },
+          "started_at": { "type": "integer", "format": "int64", "nullable": true, "description": "When agent claimed the session." },
+          "ended_at": { "type": "integer", "format": "int64", "nullable": true }
+        }
+      },
+      "ChatMessage": {
+        "type": "object",
+        "required": ["id", "sender_id", "sender_type", "content", "sent_at"],
+        "properties": {
+          "id": { "type": "string", "format": "uuid" },
+          "sender_id": { "type": "string" },
+          "sender_type": {
+            "type": "string",
+            "enum": ["user", "agent", "system"]
+          },
+          "content": { "type": "string" },
+          "sent_at": { "type": "integer", "format": "int64" }
+        }
+      },
+      "ListSessionsResponse": {
+        "type": "object",
+        "required": ["sessions", "total", "page", "limit"],
+        "properties": {
+          "sessions": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SessionSummary" }
+          },
+          "total": { "type": "integer", "format": "int64" },
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" }
+        }
+      },
+      "SessionDetailResponse": {
+        "type": "object",
+        "required": ["session_id", "user_id", "status", "created_at", "messages"],
+        "properties": {
+          "session_id": { "type": "string" },
+          "user_id": { "type": "string" },
+          "user_name": { "type": "string", "nullable": true },
+          "user_email": { "type": "string", "nullable": true },
+          "status": {
+            "type": "string",
+            "enum": ["waiting", "active", "closed"]
+          },
+          "queue_position": { "type": "integer", "nullable": true },
+          "agent_id": { "type": "string", "nullable": true },
+          "agent_name": { "type": "string", "nullable": true },
+          "ticket_id": { "type": "string", "nullable": true },
+          "created_at": { "type": "integer", "format": "int64" },
+          "started_at": { "type": "integer", "format": "int64", "nullable": true },
+          "ended_at": { "type": "integer", "format": "int64", "nullable": true },
+          "messages": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/ChatMessage" }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT issued by auth-service. For the WebSocket endpoint, pass as `?token=<jwt>` query parameter instead of the Authorization header."
+      }
+    }
+  },
+  "security": [
+    { "BearerAuth": [] }
+  ]
+}

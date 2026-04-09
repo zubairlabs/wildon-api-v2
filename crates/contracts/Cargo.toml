@@ -1,0 +1,14 @@
+[package]
+name = "contracts"
+version.workspace = true
+edition.workspace = true
+build = "build.rs"
+
+[dependencies]
+prost.workspace = true
+tonic.workspace = true
+serde.workspace = true
+
+[build-dependencies]
+protoc-bin-vendored = "3"
+tonic-build = "0.12"

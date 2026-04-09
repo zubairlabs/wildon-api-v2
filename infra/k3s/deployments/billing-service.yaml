@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: billing-service
+  namespace: wildon
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: billing-service
+  template:
+    metadata:
+      labels:
+        app: billing-service
+    spec:
+      imagePullSecrets:
+        - name: ghcr-pull-secret
+      containers:
+        - name: billing-service
+          image: ghcr.io/zubairlabs/wildon-api-v2/billing-service:latest
+          imagePullPolicy: Always
+          env:
+            - name: BILLING_GRPC_BIND_ADDR
+              value: "0.0.0.0:50059"
+            - name: DATABASE_URL
+              value: "postgresql://yugabyte@yb-tservers.database.svc.cluster.local:5433/wildon"
+            - name: STRIPE_MODE
+              value: "test"
+            - name: STRIPE_TEST_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-credentials
+                  key: test-secret-key
+            - name: STRIPE_TEST_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-credentials
+                  key: test-webhook-secret
+                  optional: true
+            - name: STRIPE_LIVE_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-credentials
+                  key: live-secret-key
+                  optional: true
+            - name: STRIPE_LIVE_WEBHOOK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: stripe-credentials
+                  key: live-webhook-secret
+                  optional: true
+            - name: BILLING_IDEMPOTENCY_TTL_SECONDS
+              value: "86400"
+            - name: INTERNAL_CALLER_SERVICE
+              value: "billing-service"
+            - name: INTERNAL_TLS_ENABLE_CLIENT
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_SERVER_TLS
+              value: "true"
+            - name: INTERNAL_TLS_REQUIRE_CLIENT_AUTH
+              value: "true"
+            - name: INTERNAL_AUTH_REQUIRE_MTLS
+              value: "true"
+            - name: INTERNAL_AUTH_SPIFFE_PREFIX
+              value: "spiffe://wildon.internal/service/"
+            - name: INTERNAL_TLS_CA_CERT_PATH
+              value: "/var/run/wildon/pki/ca.crt"
+            - name: INTERNAL_TLS_SERVER_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_SERVER_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+            - name: INTERNAL_TLS_CLIENT_CERT_PATH
+              value: "/var/run/wildon/pki/tls.crt"
+            - name: INTERNAL_TLS_CLIENT_KEY_PATH
+              value: "/var/run/wildon/pki/tls.key"
+          volumeMounts:
+            - name: internal-grpc-tls
+              mountPath: /var/run/wildon/pki
+              readOnly: true
+          ports:
+            - containerPort: 50059
+      volumes:
+        - name: internal-grpc-tls
+          secret:
+            secretName: billing-service-grpc-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: billing-service
+  namespace: wildon
+spec:
+  selector:
+    app: billing-service
+  ports:
+    - name: grpc
+      port: 50059
+      targetPort: 50059

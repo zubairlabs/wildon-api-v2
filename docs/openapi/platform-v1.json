@@ -1,0 +1,429 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Wildon Platform API",
+    "version": "v1",
+    "description": "HTTP API surface exposed by platform-service. Auditor accounts authenticate through the normal `/v1/auth/login` flow on the platform host and receive `aud=platform`, `realm=platform`, `roles=[\"auditor\"]`, and `scopes=[\"audit_only\"]`."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8083",
+      "description": "Local platform surface"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health and runtime diagnostics."
+    },
+    {
+      "name": "Docs",
+      "description": "Swagger and OpenAPI documents."
+    },
+    {
+      "name": "Audit",
+      "description": "External read-only auditor endpoints."
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service health payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "tags": ["Docs"],
+        "summary": "Swagger UI",
+        "responses": {
+          "200": {
+            "description": "Swagger UI HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs/": {
+      "get": {
+        "tags": ["Docs"],
+        "summary": "Swagger UI (trailing slash)",
+        "responses": {
+          "200": {
+            "description": "Swagger UI HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi/platform-v1.json": {
+      "get": {
+        "tags": ["Docs"],
+        "summary": "OpenAPI document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/audit/users": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List users",
+        "description": "Read-only auditor endpoint. Requires a platform auditor token. Responses are masked server-side.",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked managed users response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUsersListResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "429": {"description": "Rate limited"}
+        }
+      }
+    },
+    "/v1/audit/members": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "Search members",
+        "description": "Read-only auditor endpoint. Responses are masked server-side.",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "q", "in": "query", "schema": {"type": "string"}},
+          {"name": "condition", "in": "query", "schema": {"type": "string"}},
+          {"name": "allergy", "in": "query", "schema": {"type": "string"}},
+          {"name": "medication", "in": "query", "schema": {"type": "string"}},
+          {"name": "has_active_incidents", "in": "query", "schema": {"type": "boolean"}},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}},
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked member search response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberSearchResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "429": {"description": "Rate limited"}
+        }
+      }
+    },
+    "/v1/audit/devices": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List devices",
+        "description": "Read-only auditor endpoint. Responses are masked server-side.",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}},
+          {"name": "status", "in": "query", "schema": {"type": "string"}},
+          {"name": "search", "in": "query", "schema": {"type": "string"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked device list response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemDevicesListResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "429": {"description": "Rate limited"}
+        }
+      }
+    },
+    "/v1/audit/logs": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List logs",
+        "description": "Read-only auditor alias over the audit dataset. Responses are masked server-side.",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "format": "int32", "minimum": 1, "maximum": 200, "default": 50}},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}},
+          {"name": "action", "in": "query", "schema": {"type": "string"}},
+          {"name": "consumer", "in": "query", "schema": {"type": "string"}},
+          {"name": "user_id", "in": "query", "schema": {"type": "string"}},
+          {"name": "from", "in": "query", "schema": {"type": "integer", "format": "int64"}},
+          {"name": "to", "in": "query", "schema": {"type": "integer", "format": "int64"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked audit log response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogsListResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "429": {"description": "Rate limited"}
+        }
+      }
+    },
+    "/v1/audit/trail": {
+      "get": {
+        "tags": ["Audit"],
+        "summary": "List audit trail",
+        "description": "Read-only auditor alias over the audit dataset. Responses are masked server-side.",
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "limit", "in": "query", "schema": {"type": "integer", "format": "int32", "minimum": 1, "maximum": 200, "default": 50}},
+          {"name": "cursor", "in": "query", "schema": {"type": "string"}},
+          {"name": "action", "in": "query", "schema": {"type": "string"}},
+          {"name": "consumer", "in": "query", "schema": {"type": "string"}},
+          {"name": "user_id", "in": "query", "schema": {"type": "string"}},
+          {"name": "from", "in": "query", "schema": {"type": "integer", "format": "int64"}},
+          {"name": "to", "in": "query", "schema": {"type": "integer", "format": "int64"}}
+        ],
+        "responses": {
+          "200": {
+            "description": "Masked audit trail response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogsListResponse"
+                }
+              }
+            }
+          },
+          "401": {"description": "Unauthorized"},
+          "403": {"description": "Forbidden"},
+          "429": {"description": "Rate limited"}
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": ["status"],
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        }
+      },
+      "AuditLogsPageResponse": {
+        "type": "object",
+        "required": ["limit", "next_cursor", "has_more"],
+        "properties": {
+          "limit": {"type": "integer", "format": "int32"},
+          "next_cursor": {"type": "string", "nullable": true},
+          "has_more": {"type": "boolean"}
+        }
+      },
+      "ManagedUserSummary": {
+        "type": "object",
+        "required": ["user_id", "email", "status", "roles", "scopes", "created_at", "updated_at"],
+        "properties": {
+          "user_id": {"type": "string", "format": "uuid"},
+          "email": {"type": "string", "description": "Masked for auditor responses."},
+          "status": {"type": "string"},
+          "roles": {"type": "array", "items": {"type": "string"}},
+          "scopes": {"type": "array", "items": {"type": "string"}},
+          "created_at": {"type": "integer", "format": "int64"},
+          "updated_at": {"type": "integer", "format": "int64"}
+        }
+      },
+      "ManagedUsersListResponse": {
+        "type": "object",
+        "required": ["users", "page"],
+        "properties": {
+          "users": {"type": "array", "items": {"$ref": "#/components/schemas/ManagedUserSummary"}},
+          "page": {"$ref": "#/components/schemas/AuditLogsPageResponse"}
+        }
+      },
+      "SystemDeviceSummary": {
+        "type": "object",
+        "required": ["id", "display_ref", "imei", "model_code", "status", "connection_status", "owner_id", "assigned_member_name", "subscription_status", "created_at", "updated_at"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "display_ref": {"type": "string"},
+          "imei": {"type": "string", "description": "Masked for auditor responses."},
+          "model_code": {"type": "string"},
+          "status": {"type": "string"},
+          "connection_status": {"type": "string"},
+          "owner_id": {"type": "string", "format": "uuid"},
+          "assigned_member_id": {"type": "string", "format": "uuid", "nullable": true},
+          "assigned_member_name": {"type": "string"},
+          "subscription_status": {"type": "string"},
+          "firmware_version": {"type": "string", "nullable": true},
+          "last_ip": {"type": "string", "nullable": true},
+          "last_seen_at": {"type": "integer", "format": "int64", "nullable": true},
+          "last_telemetry_at": {"type": "integer", "format": "int64", "nullable": true},
+          "created_at": {"type": "integer", "format": "int64"},
+          "updated_at": {"type": "integer", "format": "int64"}
+        }
+      },
+      "SystemDevicesListResponse": {
+        "type": "object",
+        "required": ["items", "page"],
+        "properties": {
+          "items": {"type": "array", "items": {"$ref": "#/components/schemas/SystemDeviceSummary"}},
+          "page": {"$ref": "#/components/schemas/AuditLogsPageResponse"}
+        }
+      },
+      "MemberSearchItem": {
+        "type": "object",
+        "required": ["id", "display_ref", "name", "email", "phone", "address", "relationship", "owner_id", "conditions", "allergies", "medications", "active_incident_count", "created_at", "relevance"],
+        "properties": {
+          "id": {"type": "string", "format": "uuid"},
+          "display_ref": {"type": "string"},
+          "name": {"type": "string"},
+          "email": {"type": "string", "description": "Masked for auditor responses."},
+          "phone": {"type": "string", "description": "Masked for auditor responses."},
+          "address": {"type": "string"},
+          "birth_date": {"type": "string", "nullable": true},
+          "relationship": {"type": "string"},
+          "owner_id": {"type": "string", "format": "uuid"},
+          "conditions": {"type": "object", "additionalProperties": true},
+          "allergies": {"type": "object", "additionalProperties": true},
+          "medications": {"type": "object", "additionalProperties": true},
+          "active_incident_count": {"type": "integer", "format": "int32"},
+          "created_at": {"type": "integer", "format": "int64"},
+          "relevance": {"type": "number", "format": "float"}
+        }
+      },
+      "MemberSearchResponse": {
+        "type": "object",
+        "required": ["items", "pagination"],
+        "properties": {
+          "items": {"type": "array", "items": {"$ref": "#/components/schemas/MemberSearchItem"}},
+          "pagination": {
+            "type": "object",
+            "required": ["limit", "next_cursor", "has_more"],
+            "properties": {
+              "limit": {"type": "integer", "format": "int64"},
+              "next_cursor": {"type": "string", "nullable": true},
+              "has_more": {"type": "boolean"}
+            }
+          }
+        }
+      },
+      "AuditLogItemResponse": {
+        "type": "object",
+        "required": ["event_id", "user_id", "action", "consumer", "created_at", "payload"],
+        "properties": {
+          "event_id": {"type": "string"},
+          "user_id": {"type": "string"},
+          "action": {"type": "string"},
+          "consumer": {"type": "string"},
+          "created_at": {"type": "integer", "format": "int64"},
+          "payload": {"type": "object", "additionalProperties": true}
+        }
+      },
+      "AuditLogsListResponse": {
+        "type": "object",
+        "required": ["items", "page", "total"],
+        "properties": {
+          "items": {"type": "array", "items": {"$ref": "#/components/schemas/AuditLogItemResponse"}},
+          "page": {"$ref": "#/components/schemas/AuditLogsPageResponse"},
+          "total": {"type": "integer", "format": "int64"}
+        }
+      }
+    }
+  }
+}

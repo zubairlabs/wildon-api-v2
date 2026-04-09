@@ -1,0 +1,6 @@
+[package]
+name = "rate-limit"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]

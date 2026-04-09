@@ -1,0 +1,24 @@
+[package]
+name = "billing-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono.workspace = true
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+observability = { path = "../../crates/observability" }
+provider-clients = { path = "../../crates/provider-clients" }
+tokio.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+uuid.workspace = true
+sha2 = "0.10"
+hex = "0.4"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "migrate", "rust_decimal", "derive"] }
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde.workspace = true
+serde_json.workspace = true
+rust_decimal = "1"

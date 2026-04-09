@@ -1,0 +1,10 @@
+[package]
+name = "middleware"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+axum.workspace = true
+errors = { path = "../errors" }
+tower = "0.5"
+uuid.workspace = true

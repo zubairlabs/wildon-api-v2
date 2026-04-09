@@ -1,0 +1,21 @@
+[package]
+name = "chat-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+auth        = { path = "../../crates/auth" }
+event-bus   = { path = "../../crates/event-bus" }
+observability = { path = "../../crates/observability" }
+
+async-nats  = "0.38"
+axum        = { workspace = true, features = ["ws"] }
+chrono.workspace = true
+dashmap     = "6"
+futures-util = "0.3"
+serde.workspace = true
+serde_json.workspace = true
+sqlx        = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+tokio.workspace = true
+tracing.workspace = true
+uuid.workspace = true

@@ -1,0 +1,35 @@
+[package]
+name = "auth-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ammonia = "4"
+auth = { path = "../../crates/auth" }
+axum.workspace = true
+base64.workspace = true
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+observability = { path = "../../crates/observability" }
+provider-clients = { path = "../../crates/provider-clients" }
+argon2 = "0.5"
+chrono.workspace = true
+data-encoding = "2"
+hmac = "0.12"
+hex = "0.4"
+ipnet = "2"
+rand = "0.8"
+qrcode = "0.14"
+redis = { version = "0.27", features = ["tokio-comp"] }
+sha1 = "0.10"
+sha2 = "0.10"
+serde.workspace = true
+serde_json.workspace = true
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid"] }
+thiserror.workspace = true
+tokio.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+urlencoding = "2"
+uuid.workspace = true

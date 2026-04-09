@@ -1,0 +1,22 @@
+[package]
+name = "core-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+axum.workspace = true
+chrono.workspace = true
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+event-bus = { path = "../../crates/event-bus" }
+export-sdk = { path = "../../crates/export-sdk" }
+observability = { path = "../../crates/observability" }
+provider-clients = { path = "../../crates/provider-clients" }
+serde.workspace = true
+serde_json.workspace = true
+storage-sdk = { path = "../../crates/storage-sdk" }
+tokio.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+uuid.workspace = true

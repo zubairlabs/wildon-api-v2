@@ -1,0 +1,52 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/common",
+  "crates/config",
+  "crates/errors",
+  "crates/types",
+  "crates/auth",
+  "crates/middleware",
+  "crates/event-bus",
+  "crates/observability",
+  "crates/provider-clients",
+  "crates/storage-sdk",
+  "crates/export-sdk",
+  "crates/logs-sdk",
+  "crates/contracts",
+  "crates/rate-limit",
+  "services/gateway-service",
+  "services/auth-service",
+  "services/public-service",
+  "services/platform-service",
+  "services/control-service",
+  "services/core-service",
+  "services/users-service",
+  "services/api-clients-service",
+  "services/billing-service",
+  "services/storage-service",
+  "services/export-service",
+  "services/logs-service",
+  "services/chat-service",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Wildon Team"]
+
+[workspace.dependencies]
+axum = "0.7"
+base64 = "0.22"
+chrono = { version = "0.4", features = ["serde"] }
+prost = "0.13"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["full"] }
+tonic = { version = "0.12", features = ["transport", "tls", "tls-roots"] }
+tonic-health = "0.12"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt", "json"] }
+uuid = { version = "1", features = ["serde", "v4"] }

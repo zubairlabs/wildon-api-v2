@@ -1,0 +1,77 @@
+{
+  "title": "Wildon API SLO Overview",
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Gateway Request Rate",
+      "targets": [
+        {
+          "expr": "sum(rate(wildon_gateway_http_requests_total[5m]))",
+          "legendFormat": "rps"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Gateway Error Ratio",
+      "targets": [
+        {
+          "expr": "sum(rate(wildon_gateway_http_requests_total{status=~\"5..\"}[5m])) / sum(rate(wildon_gateway_http_requests_total[5m]))",
+          "legendFormat": "5xx ratio"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Gateway Latency p95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(wildon_gateway_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Public/Core gRPC Latency p95",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(wildon_grpc_request_duration_seconds_bucket{service=~\"public-service|core-service\"}[5m])) by (service, le))",
+          "legendFormat": "{{service}}"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Rate-Limited Request Ratio",
+      "targets": [
+        {
+          "expr": "sum(rate(wildon_gateway_http_requests_total{status=\"429\"}[5m])) / sum(rate(wildon_gateway_http_requests_total[5m]))",
+          "legendFormat": "429 ratio"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 }
+    },
+    {
+      "type": "timeseries",
+      "title": "Event Backlog",
+      "targets": [
+        {
+          "expr": "sum(wildon_nats_stream_pending_messages)",
+          "legendFormat": "pending"
+        }
+      ],
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 }
+    }
+  ],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" }
+}

@@ -1,0 +1,180 @@
+syntax = "proto3";
+
+package wildon.logs.v1;
+
+service LogsService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc IngestAudit(IngestAuditRequest) returns (IngestAuditResponse);
+  rpc GetAuditCountByEvent(GetAuditCountByEventRequest) returns (GetAuditCountByEventResponse);
+  rpc GetAuditLog(GetAuditLogRequest) returns (GetAuditLogResponse);
+  rpc ListAuditLogs(ListAuditLogsRequest) returns (ListAuditLogsResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+enum AuditSeverity {
+  AUDIT_SEVERITY_UNSPECIFIED = 0;
+  AUDIT_SEVERITY_LOW = 1;
+  AUDIT_SEVERITY_MEDIUM = 2;
+  AUDIT_SEVERITY_HIGH = 3;
+  AUDIT_SEVERITY_CRITICAL = 4;
+}
+
+enum AuditResult {
+  AUDIT_RESULT_UNSPECIFIED = 0;
+  AUDIT_RESULT_SUCCESS = 1;
+  AUDIT_RESULT_FAILURE = 2;
+  AUDIT_RESULT_DENIED = 3;
+}
+
+enum AuditActorType {
+  AUDIT_ACTOR_TYPE_UNSPECIFIED = 0;
+  AUDIT_ACTOR_TYPE_USER = 1;
+  AUDIT_ACTOR_TYPE_SYSTEM = 2;
+  AUDIT_ACTOR_TYPE_API_CLIENT = 3;
+  AUDIT_ACTOR_TYPE_SUPPORT = 4;
+  AUDIT_ACTOR_TYPE_AUDITOR = 5;
+  AUDIT_ACTOR_TYPE_INTERNAL_SERVICE = 6;
+}
+
+enum AuditAuthMechanism {
+  AUDIT_AUTH_MECHANISM_UNSPECIFIED = 0;
+  AUDIT_AUTH_MECHANISM_JWT = 1;
+  AUDIT_AUTH_MECHANISM_API_KEY = 2;
+  AUDIT_AUTH_MECHANISM_MTLS_INTERNAL = 3;
+  AUDIT_AUTH_MECHANISM_WEBHOOK = 4;
+  AUDIT_AUTH_MECHANISM_SESSION = 5;
+  AUDIT_AUTH_MECHANISM_SYSTEM_JOB = 6;
+}
+
+enum AuditAccessPurpose {
+  AUDIT_ACCESS_PURPOSE_UNSPECIFIED = 0;
+  AUDIT_ACCESS_PURPOSE_TREATMENT = 1;
+  AUDIT_ACCESS_PURPOSE_SUPPORT = 2;
+  AUDIT_ACCESS_PURPOSE_AUDIT = 3;
+  AUDIT_ACCESS_PURPOSE_SYSTEM = 4;
+  AUDIT_ACCESS_PURPOSE_DEBUGGING = 5;
+}
+
+enum AuditDataSensitivityLevel {
+  AUDIT_DATA_SENSITIVITY_LEVEL_UNSPECIFIED = 0;
+  AUDIT_DATA_SENSITIVITY_LEVEL_NORMAL = 1;
+  AUDIT_DATA_SENSITIVITY_LEVEL_SENSITIVE = 2;
+  AUDIT_DATA_SENSITIVITY_LEVEL_PHI = 3;
+  AUDIT_DATA_SENSITIVITY_LEVEL_CRITICAL = 4;
+}
+
+message ActorContext {
+  AuditActorType actor_type = 1;
+  string actor_id = 2;
+  string actor_role = 3;
+  AuditAuthMechanism auth_mechanism = 4;
+}
+
+message AuditContext {
+  string request_id = 1;
+  string trace_id = 2;
+  string session_id = 3;
+  string ip_address = 4;
+  string user_agent = 5;
+  string method = 6;
+  string path = 7;
+  int32 status_code = 8;
+  AuditAccessPurpose access_purpose = 9;
+}
+
+message AuditEvent {
+  string event_id = 1;
+  int64 timestamp = 2;
+  string service_name = 3;
+  string environment = 4;
+  string action = 5;
+  AuditSeverity severity = 6;
+  ActorContext actor = 7;
+  string resource_type = 8;
+  string resource_id = 9;
+  string resource_owner_id = 10;
+  string member_id = 11;
+  AuditContext context = 12;
+  AuditResult result = 13;
+  string reason = 14;
+  AuditDataSensitivityLevel data_sensitivity_level = 15;
+  string before_json = 16;
+  string after_json = 17;
+  string metadata_json = 18;
+  string previous_hash = 19;
+  string event_hash = 20;
+  string taxonomy_version = 21;
+}
+
+message IngestAuditRequest {
+  string event_id = 1;
+  string user_id = 2;
+  string action = 3;
+  string payload_json = 4;
+  string consumer = 5;
+  AuditEvent canonical_event = 6;
+}
+
+message IngestAuditResponse {
+  bool accepted = 1;
+  bool duplicate = 2;
+  uint64 total_records = 3;
+}
+
+message GetAuditCountByEventRequest {
+  string event_id = 1;
+}
+
+message GetAuditCountByEventResponse {
+  uint64 count = 1;
+}
+
+message GetAuditLogRequest {
+  string event_id = 1;
+}
+
+message GetAuditLogResponse {
+  AuditLogRecord item = 1;
+}
+
+message ListAuditLogsRequest {
+  uint32 limit = 1;
+  string cursor = 2;
+  string action = 3;
+  string consumer = 4;
+  string user_id = 5;
+  int64 from_unix = 6;
+  int64 to_unix = 7;
+  string actor_id = 8;
+  string member_id = 9;
+  string resource_id = 10;
+  string resource_owner_id = 11;
+  string service_name = 12;
+  AuditResult result = 13;
+  AuditSeverity severity = 14;
+  AuditAccessPurpose access_purpose = 15;
+  AuditDataSensitivityLevel data_sensitivity_level = 16;
+}
+
+message AuditLogRecord {
+  string event_id = 1;
+  string user_id = 2;
+  string action = 3;
+  string payload_json = 4;
+  string consumer = 5;
+  int64 created_at = 6;
+  AuditEvent canonical_event = 7;
+}
+
+message ListAuditLogsResponse {
+  repeated AuditLogRecord items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+  uint64 total = 4;
+}

@@ -1,0 +1,22 @@
+[package]
+name = "public-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+axum.workspace = true
+chrono.workspace = true
+chrono-tz = "0.10"
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+event-bus = { path = "../../crates/event-bus" }
+export-sdk = { path = "../../crates/export-sdk" }
+logs-sdk = { path = "../../crates/logs-sdk" }
+observability = { path = "../../crates/observability" }
+serde_json.workspace = true
+storage-sdk = { path = "../../crates/storage-sdk" }
+tokio.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+uuid.workspace = true

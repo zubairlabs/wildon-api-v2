@@ -1,0 +1,162 @@
+syntax = "proto3";
+
+package wildon.core.v1;
+
+service CoreService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ResolveEntitlement(ResolveEntitlementRequest) returns (ResolveEntitlementResponse);
+  rpc RecordUsage(RecordUsageRequest) returns (RecordUsageResponse);
+  rpc SetFeatureFlag(SetFeatureFlagRequest) returns (SetFeatureFlagResponse);
+  rpc GetFeatureFlag(GetFeatureFlagRequest) returns (GetFeatureFlagResponse);
+  rpc IngestBillingWebhook(IngestBillingWebhookRequest) returns (IngestBillingWebhookResponse);
+  rpc SendNotification(SendNotificationRequest) returns (SendNotificationResponse);
+  rpc GenerateAiText(GenerateAiTextRequest) returns (GenerateAiTextResponse);
+  rpc EnqueueJob(EnqueueJobRequest) returns (EnqueueJobResponse);
+  rpc GetJob(GetJobRequest) returns (GetJobResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+message ResolveEntitlementRequest {
+  string user_id = 1;
+  string feature_key = 2;
+}
+
+message ResolveEntitlementResponse {
+  bool allowed = 1;
+  string plan = 2;
+  string reason = 3;
+}
+
+message RecordUsageRequest {
+  string user_id = 1;
+  string metric = 2;
+  uint64 amount = 3;
+}
+
+message RecordUsageResponse {
+  uint64 total = 1;
+}
+
+message FeatureFlag {
+  string key = 1;
+  bool enabled = 2;
+  string updated_by = 3;
+  string reason = 4;
+  int64 updated_at = 5;
+}
+
+message SetFeatureFlagRequest {
+  string key = 1;
+  bool enabled = 2;
+  string updated_by = 3;
+  string reason = 4;
+}
+
+message SetFeatureFlagResponse {
+  FeatureFlag flag = 1;
+}
+
+message GetFeatureFlagRequest {
+  string key = 1;
+}
+
+message GetFeatureFlagResponse {
+  FeatureFlag flag = 1;
+}
+
+message IngestBillingWebhookRequest {
+  string provider = 1;
+  string event_id = 2;
+  string user_id = 3;
+  int64 amount_cents = 4;
+  string currency = 5;
+  string signature = 6;
+  string payload_json = 7;
+}
+
+message IngestBillingWebhookResponse {
+  bool accepted = 1;
+  bool duplicate = 2;
+  string invoice_id = 3;
+  string reason = 4;
+}
+
+enum NotificationChannel {
+  NOTIFICATION_CHANNEL_UNSPECIFIED = 0;
+  NOTIFICATION_CHANNEL_EMAIL = 1;
+  NOTIFICATION_CHANNEL_SMS = 2;
+  NOTIFICATION_CHANNEL_PUSH = 3;
+}
+
+message SendNotificationRequest {
+  string user_id = 1;
+  NotificationChannel channel = 2;
+  string destination = 3;
+  string subject = 4;
+  string message = 5;
+}
+
+message SendNotificationResponse {
+  bool delivered = 1;
+  string provider_used = 2;
+  repeated string attempted_providers = 3;
+  string failure_reason = 4;
+}
+
+message GenerateAiTextRequest {
+  string user_id = 1;
+  string prompt = 2;
+  uint32 max_tokens = 3;
+}
+
+message GenerateAiTextResponse {
+  string text = 1;
+  uint32 prompt_tokens = 2;
+  uint32 completion_tokens = 3;
+  uint64 cost_micros = 4;
+  string model = 5;
+}
+
+enum JobStatus {
+  JOB_STATUS_UNSPECIFIED = 0;
+  JOB_STATUS_QUEUED = 1;
+  JOB_STATUS_RUNNING = 2;
+  JOB_STATUS_DONE = 3;
+  JOB_STATUS_FAILED = 4;
+}
+
+message JobRecord {
+  string job_id = 1;
+  string job_type = 2;
+  string payload_json = 3;
+  JobStatus status = 4;
+  string idempotency_key = 5;
+  string error_message = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}
+
+message EnqueueJobRequest {
+  string job_type = 1;
+  string payload_json = 2;
+  string idempotency_key = 3;
+}
+
+message EnqueueJobResponse {
+  JobRecord job = 1;
+  bool duplicate = 2;
+}
+
+message GetJobRequest {
+  string job_id = 1;
+}
+
+message GetJobResponse {
+  JobRecord job = 1;
+}

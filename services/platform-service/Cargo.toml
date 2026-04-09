@@ -1,0 +1,23 @@
+[package]
+name = "platform-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+auth = { path = "../../crates/auth" }
+axum.workspace = true
+chrono.workspace = true
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+ipnet = "2"
+logs-sdk = { path = "../../crates/logs-sdk" }
+middleware = { path = "../../crates/middleware" }
+observability = { path = "../../crates/observability" }
+redis = { version = "0.27", features = ["tokio-comp"] }
+serde.workspace = true
+serde_json.workspace = true
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "json"] }
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+uuid.workspace = true

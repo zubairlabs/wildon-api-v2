@@ -1,0 +1,11 @@
+[package]
+name = "config"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+thiserror.workspace = true
+tonic.workspace = true
+x509-parser = "0.16"
+toml = "0.8"

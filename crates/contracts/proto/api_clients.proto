@@ -1,0 +1,292 @@
+syntax = "proto3";
+
+package wildon.api_clients.v1;
+
+service ApiClientsService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc ValidateClient(ValidateClientRequest) returns (ValidateClientResponse);
+  rpc GetClientPolicy(GetClientPolicyRequest) returns (GetClientPolicyResponse);
+  rpc UpsertClient(UpsertClientRequest) returns (UpsertClientResponse);
+  rpc SetClientStatus(SetClientStatusRequest) returns (SetClientStatusResponse);
+  rpc ListClients(ListClientsRequest) returns (ListClientsResponse);
+  rpc GetClientById(GetClientByIdRequest) returns (GetClientByIdResponse);
+  rpc GetClientByRef(GetClientByRefRequest) returns (GetClientByRefResponse);
+  rpc CreateClient(CreateClientRequest) returns (CreateClientResponse);
+  rpc UpdateClient(UpdateClientRequest) returns (UpdateClientResponse);
+  rpc RotateClientSecret(RotateClientSecretRequest) returns (RotateClientSecretResponse);
+  rpc ListClientEvents(ListClientEventsRequest) returns (ListClientEventsResponse);
+  rpc ListRateLimitPolicies(ListRateLimitPoliciesRequest) returns (ListRateLimitPoliciesResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+enum ClientType {
+  CLIENT_TYPE_UNSPECIFIED = 0;
+  CLIENT_TYPE_PUBLIC = 1;
+  CLIENT_TYPE_CONFIDENTIAL = 2;
+}
+
+enum ClientStatus {
+  CLIENT_STATUS_UNSPECIFIED = 0;
+  CLIENT_STATUS_ACTIVE = 1;
+  CLIENT_STATUS_DISABLED = 2;
+  CLIENT_STATUS_DEPRECATED = 3;
+  CLIENT_STATUS_SUSPENDED = 4;
+  CLIENT_STATUS_REVOKED = 5;
+}
+
+enum ClientEnvironment {
+  CLIENT_ENVIRONMENT_UNSPECIFIED = 0;
+  CLIENT_ENVIRONMENT_DEV = 1;
+  CLIENT_ENVIRONMENT_STAGING = 2;
+  CLIENT_ENVIRONMENT_PROD = 3;
+}
+
+message RateLimitRouteOverride {
+  string route_id = 1;
+  uint32 user_rpm = 2;
+  uint32 client_rpm = 3;
+  bool enabled = 4;
+}
+
+message ClientPolicy {
+  string client_id = 1;
+  ClientType client_type = 2;
+  ClientStatus status = 3;
+  ClientEnvironment environment = 4;
+  repeated string allowed_audiences = 5;
+  string rate_limit_profile = 6;
+  string min_app_version = 7;
+  uint32 default_user_rpm = 8;
+  uint32 default_client_rpm = 9;
+  repeated RateLimitRouteOverride route_overrides = 10;
+  string surface = 11;
+  bool is_version_enforced = 12;
+  string max_app_version = 13;
+  repeated string allowed_origins = 14;
+  repeated string ip_allowlist = 15;
+  bool require_mtls = 16;
+  string user_rate_policy = 17;
+  string client_safety_policy = 18;
+  bool has_active_secret = 19;
+}
+
+message ValidateClientRequest {
+  string client_id = 1;
+  string audience = 2;
+  string environment = 3;
+  string app_version = 4;
+  string surface = 5;
+  string origin = 6;
+  string source_ip = 7;
+  bool mtls_verified = 8;
+  string client_secret = 9;
+}
+
+message ValidateClientResponse {
+  bool valid = 1;
+  string reason = 2;
+  ClientPolicy policy = 3;
+}
+
+message GetClientPolicyRequest {
+  string client_id = 1;
+}
+
+message GetClientPolicyResponse {
+  ClientPolicy policy = 1;
+}
+
+message UpsertClientRequest {
+  string client_id = 1;
+  ClientType client_type = 2;
+  ClientEnvironment environment = 3;
+  repeated string allowed_audiences = 4;
+  string rate_limit_profile = 5;
+  string min_app_version = 6;
+}
+
+message UpsertClientResponse {
+  ClientPolicy policy = 1;
+}
+
+message SetClientStatusRequest {
+  string client_id = 1;
+  ClientStatus status = 2;
+}
+
+message SetClientStatusResponse {
+  ClientPolicy policy = 1;
+}
+
+message ApiClient {
+  string id = 1;
+  string client_id = 2;
+  uint64 client_number = 3;
+  string client_ref = 4;
+  string display_name = 5;
+  string description = 6;
+  string platform = 7;
+  string surface = 8;
+  string environment = 9;
+  ClientType client_type = 10;
+  ClientStatus status = 11;
+  repeated string allowed_audiences = 12;
+  repeated string allowed_origins = 13;
+  repeated string ip_allowlist = 14;
+  bool require_mtls = 15;
+  bool is_version_enforced = 16;
+  string min_app_version = 17;
+  string max_app_version = 18;
+  string user_rate_policy = 19;
+  string client_safety_policy = 20;
+  int64 created_at = 21;
+  int64 updated_at = 22;
+  int64 last_used_at = 23;
+  string created_by = 24;
+  string updated_by = 25;
+  string notes = 26;
+  bool has_active_secret = 27;
+}
+
+message ListClientsRequest {
+  uint32 limit = 1;
+  string cursor = 2;
+  string status = 3;
+  string environment = 4;
+  string surface = 5;
+  string platform = 6;
+  string client_type = 7;
+  string search = 8;
+}
+
+message ListClientsResponse {
+  repeated ApiClient items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+  uint64 total = 4;
+}
+
+message GetClientByIdRequest {
+  string id = 1;
+}
+
+message GetClientByIdResponse {
+  ApiClient client = 1;
+}
+
+message GetClientByRefRequest {
+  string client_ref = 1;
+}
+
+message GetClientByRefResponse {
+  ApiClient client = 1;
+}
+
+message CreateClientRequest {
+  string client_id = 1;
+  string display_name = 2;
+  string description = 3;
+  string platform = 4;
+  string surface = 5;
+  string environment = 6;
+  ClientType client_type = 7;
+  ClientStatus status = 8;
+  repeated string allowed_audiences = 9;
+  repeated string allowed_origins = 10;
+  repeated string ip_allowlist = 11;
+  bool require_mtls = 12;
+  bool is_version_enforced = 13;
+  string min_app_version = 14;
+  string max_app_version = 15;
+  string user_rate_policy = 16;
+  string client_safety_policy = 17;
+  string created_by = 18;
+  string notes = 19;
+}
+
+message CreateClientResponse {
+  ApiClient client = 1;
+  string secret_plaintext = 2;
+}
+
+message UpdateClientRequest {
+  string id = 1;
+  string display_name = 2;
+  string description = 3;
+  string platform = 4;
+  string surface = 5;
+  string environment = 6;
+  ClientType client_type = 7;
+  repeated string allowed_audiences = 8;
+  repeated string allowed_origins = 9;
+  repeated string ip_allowlist = 10;
+  bool require_mtls = 11;
+  bool is_version_enforced = 12;
+  string min_app_version = 13;
+  string max_app_version = 14;
+  string user_rate_policy = 15;
+  string client_safety_policy = 16;
+  string updated_by = 17;
+  string notes = 18;
+}
+
+message UpdateClientResponse {
+  ApiClient client = 1;
+}
+
+message RotateClientSecretRequest {
+  string id = 1;
+  string rotated_by = 2;
+  int64 expires_at_unix = 3;
+}
+
+message RotateClientSecretResponse {
+  ApiClient client = 1;
+  uint32 secret_version = 2;
+  string secret_plaintext = 3;
+}
+
+message ClientEvent {
+  string event_id = 1;
+  string client_id = 2;
+  string event_type = 3;
+  string actor_user_id = 4;
+  string payload_json = 5;
+  int64 created_at = 6;
+}
+
+message ListClientEventsRequest {
+  string client_id = 1;
+  uint32 limit = 2;
+  string cursor = 3;
+}
+
+message ListClientEventsResponse {
+  repeated ClientEvent items = 1;
+  string next_cursor = 2;
+  bool has_more = 3;
+}
+
+message RateLimitPolicy {
+  string name = 1;
+  string scope = 2;
+  string route_group = 3;
+  uint32 requests_per_min = 4;
+  uint32 requests_per_hour = 5;
+  uint32 burst = 6;
+  int64 created_at = 7;
+}
+
+message ListRateLimitPoliciesRequest {
+  string scope = 1;
+}
+
+message ListRateLimitPoliciesResponse {
+  repeated RateLimitPolicy items = 1;
+}

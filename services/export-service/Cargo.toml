@@ -1,0 +1,17 @@
+[package]
+name = "export-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+axum.workspace = true
+chrono.workspace = true
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+observability = { path = "../../crates/observability" }
+storage-sdk = { path = "../../crates/storage-sdk" }
+tokio.workspace = true
+tonic.workspace = true
+tonic-health.workspace = true
+tracing.workspace = true
+uuid.workspace = true

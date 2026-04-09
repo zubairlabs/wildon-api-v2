@@ -1,0 +1,117 @@
+syntax = "proto3";
+
+package wildon.storage.v1;
+
+service StorageService {
+  rpc Health(HealthRequest) returns (HealthResponse);
+  rpc CreateUploadUrl(CreateUploadUrlRequest) returns (CreateUploadUrlResponse);
+  rpc CompleteUpload(CompleteUploadRequest) returns (CompleteUploadResponse);
+  rpc CreateDownloadUrl(CreateDownloadUrlRequest) returns (CreateDownloadUrlResponse);
+  rpc GetObjectMetadata(GetObjectMetadataRequest) returns (GetObjectMetadataResponse);
+  rpc CreateProfilePhotoUploadTicket(CreateProfilePhotoUploadTicketRequest) returns (CreateProfilePhotoUploadTicketResponse);
+  rpc CreateProfilePhotoDownloadUrl(CreateProfilePhotoDownloadUrlRequest) returns (CreateProfilePhotoDownloadUrlResponse);
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+  string request_id = 2;
+}
+
+enum ObjectStatus {
+  OBJECT_STATUS_UNSPECIFIED = 0;
+  OBJECT_STATUS_PENDING = 1;
+  OBJECT_STATUS_AVAILABLE = 2;
+}
+
+message ObjectMetadata {
+  string object_key = 1;
+  string content_type = 2;
+  uint64 content_length = 3;
+  map<string, string> tags = 4;
+  string checksum = 5;
+  ObjectStatus status = 6;
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}
+
+message CreateUploadUrlRequest {
+  string owner_id = 1;
+  string filename = 2;
+  string content_type = 3;
+  uint64 content_length = 4;
+  int64 expires_in_seconds = 5;
+  map<string, string> tags = 6;
+}
+
+message CreateUploadUrlResponse {
+  string object_key = 1;
+  string upload_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+  map<string, string> required_headers = 5;
+}
+
+message CompleteUploadRequest {
+  string object_key = 1;
+  string content_type = 2;
+  uint64 content_length = 3;
+  string checksum = 4;
+  map<string, string> tags = 5;
+}
+
+message CompleteUploadResponse {
+  bool accepted = 1;
+  ObjectMetadata metadata = 2;
+}
+
+message CreateDownloadUrlRequest {
+  string object_key = 1;
+  int64 expires_in_seconds = 2;
+}
+
+message CreateDownloadUrlResponse {
+  string object_key = 1;
+  string download_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+}
+
+message GetObjectMetadataRequest {
+  string object_key = 1;
+}
+
+message GetObjectMetadataResponse {
+  ObjectMetadata metadata = 1;
+}
+
+message CreateProfilePhotoUploadTicketRequest {
+  string owner_id = 1;
+  string content_type = 2;
+  uint64 content_length = 3;
+  int64 expires_in_seconds = 4;
+}
+
+message CreateProfilePhotoUploadTicketResponse {
+  string object_key = 1;
+  string upload_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+  map<string, string> required_headers = 5;
+  string content_type = 6;
+  uint64 max_bytes = 7;
+}
+
+message CreateProfilePhotoDownloadUrlRequest {
+  string owner_id = 1;
+  string object_key = 2;
+  int64 expires_in_seconds = 3;
+}
+
+message CreateProfilePhotoDownloadUrlResponse {
+  string object_key = 1;
+  string download_url = 2;
+  string method = 3;
+  int64 expires_at = 4;
+}

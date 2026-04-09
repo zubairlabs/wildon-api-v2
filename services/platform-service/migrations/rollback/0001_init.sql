@@ -1,0 +1,1 @@
+DROP SCHEMA IF EXISTS platform_app CASCADE;

@@ -1,0 +1,11 @@
+[package]
+name = "logs-sdk"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono.workspace = true
+contracts = { path = "../contracts" }
+serde_json.workspace = true
+tonic.workspace = true
+uuid.workspace = true

@@ -1,0 +1,11 @@
+[package]
+name = "storage-sdk"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+config = { path = "../config" }
+contracts = { path = "../contracts" }
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true

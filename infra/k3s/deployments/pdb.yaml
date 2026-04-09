@@ -1,0 +1,43 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: gateway-service-pdb
+  namespace: wildon
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: gateway-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: public-service-pdb
+  namespace: wildon
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: public-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: core-service-pdb
+  namespace: wildon
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: core-service
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: auth-service-pdb
+  namespace: wildon
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: auth-service

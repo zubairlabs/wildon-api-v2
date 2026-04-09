@@ -1,0 +1,5019 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Wildon Control API",
+    "version": "v1",
+    "description": "HTTP API surface exposed by control-service."
+  },
+  "servers": [
+    {
+      "url": "https://control-api.wildon.internal",
+      "description": "Production control surface"
+    },
+    {
+      "url": "http://localhost:8084",
+      "description": "Local control surface"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Health",
+      "description": "Health and runtime diagnostics."
+    },
+    {
+      "name": "Docs",
+      "description": "Swagger and OpenAPI documents."
+    },
+    {
+      "name": "System",
+      "description": "Control system endpoints."
+    },
+    {
+      "name": "Billing",
+      "description": "Billing administration endpoints."
+    },
+    {
+      "name": "Templates",
+      "description": "Email template management endpoints."
+    },
+    {
+      "name": "Audit",
+      "description": "System audit log endpoints."
+    },
+    {
+      "name": "Auditors",
+      "description": "Temporary read-only control plane auditor account management endpoints."
+    },
+    {
+      "name": "API Clients",
+      "description": "Control plane API client registry and secret lifecycle endpoints."
+    },
+    {
+      "name": "Device Categories",
+      "description": "Device category management endpoints."
+    },
+    {
+      "name": "Device Models",
+      "description": "Device model catalog endpoints."
+    },
+    {
+      "name": "Devices",
+      "description": "Device inventory and lifecycle endpoints."
+    },
+    {
+      "name": "Dashboard",
+      "description": "Dashboard summary and real-time data endpoints."
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "Health"
+        ],
+        "summary": "Health check",
+        "responses": {
+          "200": {
+            "description": "Service health payload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs": {
+      "get": {
+        "tags": [
+          "Docs"
+        ],
+        "summary": "Swagger UI",
+        "responses": {
+          "200": {
+            "description": "Swagger UI HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/docs/": {
+      "get": {
+        "tags": [
+          "Docs"
+        ],
+        "summary": "Swagger UI (trailing slash)",
+        "responses": {
+          "200": {
+            "description": "Swagger UI HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/openapi/control-v1.json": {
+      "get": {
+        "tags": [
+          "Docs"
+        ],
+        "summary": "OpenAPI document",
+        "responses": {
+          "200": {
+            "description": "OpenAPI JSON",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/ping": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Control surface ping",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Control ping response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/users": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "List managed users",
+        "description": "Lists control-managed users for internal control administrators.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Offset cursor from previous page.",
+            "schema": {
+              "type": "string",
+              "example": "20"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Managed users list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedUsersListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Create managed user",
+        "description": "Creates a normal control-managed identity. Requires `control:users:add`.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateManagedUserBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Managed user created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateManagedUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/auditors": {
+      "get": {
+        "tags": [
+          "Auditors"
+        ],
+        "summary": "List auditor accounts",
+        "description": "Lists provisioned temporary auditor accounts. Requires admin or superadmin access.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Auditor account list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditorAccountsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Auditors"
+        ],
+        "summary": "Create auditor account",
+        "description": "Creates a temporary read-only control-plane auditor identity. Requires admin or superadmin access.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuditorBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Auditor account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditorMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/auditors/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "delete": {
+        "tags": [
+          "Auditors"
+        ],
+        "summary": "Revoke auditor account",
+        "description": "Soft-disables the auditor account and revokes all active sessions. Requires admin or superadmin access.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Auditor account revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditorMutationResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Auditor not found"
+          }
+        }
+      }
+    },
+    "/v1/system/auditors/{id}/reset-password": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Auditors"
+        ],
+        "summary": "Reset auditor password",
+        "description": "Resets the auditor password and revokes all active sessions. Requires admin or superadmin access.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetAuditorPasswordBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Auditor password reset",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditorMutationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Auditor not found"
+          }
+        }
+      }
+    },
+    "/v1/system/scopes/catalog": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get scope catalog",
+        "description": "Returns full scope catalog plus assignable subsets and role defaults. Requires `control:scopes:list`.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scope catalog response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopeCatalogResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/scopes/{user_id}": {
+      "parameters": [
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Get delegated scopes for a user",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User scopes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Update delegated scopes for a user",
+        "description": "Requires `control:scopes:assign` plus admin/superadmin role constraints.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateScopesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user scopes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScopesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid scope payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
+    },
+    "/v1/system/billing/plans": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "List billing plans",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "archived"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Offset cursor from previous page (`?limit=20&cursor=20`).",
+            "schema": {
+              "type": "string",
+              "example": "20"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Billing plans list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingPlansListResponse"
+                },
+                "examples": {
+                  "paginated": {
+                    "value": {
+                      "plans": [],
+                      "page": {
+                        "limit": 20,
+                        "next_cursor": "20",
+                        "has_more": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Create billing plan",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBillingPlanBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created billing plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/billing/plans/{plan_id}": {
+      "parameters": [
+        {
+          "name": "plan_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Update billing plan",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingPlanBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated billing plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingPlanResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Archive billing plan",
+        "description": "Soft-deletes a plan by setting status to archived.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archived billing plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingPlanResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/billing/subscriptions": {
+      "get": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "List subscriptions",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "trial",
+                "active",
+                "past_due",
+                "cancelled",
+                "expired"
+              ]
+            }
+          },
+          {
+            "name": "plan_code",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Offset cursor from previous page.",
+            "schema": {
+              "type": "string",
+              "example": "50"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Subscriptions list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSubscriptionsListResponse"
+                },
+                "examples": {
+                  "paginated": {
+                    "value": {
+                      "subscriptions": [],
+                      "page": {
+                        "limit": 50,
+                        "next_cursor": "50",
+                        "has_more": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Create subscription",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBillingSubscriptionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Plan not found"
+          }
+        }
+      }
+    },
+    "/v1/system/billing/subscriptions/{subscription_id}": {
+      "parameters": [
+        {
+          "name": "subscription_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "patch": {
+        "tags": [
+          "Billing"
+        ],
+        "summary": "Update subscription",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBillingSubscriptionBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated subscription",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingSubscriptionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "Illegal status transition"
+          }
+        }
+      }
+    },
+    "/v1/system/audit-logs": {
+      "get": {
+        "tags": [
+          "Audit"
+        ],
+        "summary": "List audit logs",
+        "description": "List control/admin audit logs with cursor pagination and filters.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "consumer",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "user_id",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Unix timestamp seconds (inclusive)",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Unix timestamp seconds (inclusive)",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Audit log list response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditLogsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients": {
+      "get": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "List API clients",
+        "description": "Cursor-paginated client registry ordered by `client_number` ascending with cursor=`client_ref`.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "suspended",
+                "revoked"
+              ]
+            }
+          },
+          {
+            "name": "environment",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "dev",
+                "staging",
+                "prod"
+              ]
+            }
+          },
+          {
+            "name": "surface",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "public",
+                "platform",
+                "control"
+              ]
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "android",
+                "ios",
+                "web",
+                "backend",
+                "internal",
+                "firmware"
+              ]
+            }
+          },
+          {
+            "name": "client_type",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "public",
+                "confidential"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API clients list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Create API client",
+        "description": "Creates a new client. Confidential clients return a one-time `secret_plaintext` in response.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiClientBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created API client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientCreateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/policies": {
+      "get": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "List rate limit policies",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "scope",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "user",
+                "client"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "50"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rate policy list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RateLimitPoliciesListResponse"
+                },
+                "examples": {
+                  "paginated": {
+                    "value": {
+                      "items": [],
+                      "page": {
+                        "limit": 50,
+                        "next_cursor": "50",
+                        "has_more": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Get API client by id",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API client detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientRecordResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Update API client",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateApiClientBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated API client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/ref/{client_ref}": {
+      "parameters": [
+        {
+          "name": "client_ref",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Get API client by client_ref",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "API client detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientRecordResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/{id}/status": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Set API client status",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetApiClientStatusBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated API client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientRecordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/{id}/rotate-secret": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "Rotate API client secret",
+        "description": "Returns the one-time plaintext secret for confidential clients.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RotateApiClientSecretBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rotated secret response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientRotateSecretResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/api-clients/{id}/events": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "API Clients"
+        ],
+        "summary": "List API client events",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client event list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiClientEventsListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/notification-templates/email": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List email templates",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "example": "50"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email templates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTemplateListResponse"
+                },
+                "examples": {
+                  "paginated": {
+                    "value": {
+                      "templates": [],
+                      "page": {
+                        "limit": 50,
+                        "next_cursor": "50",
+                        "has_more": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/notification-templates/email/mappings": {
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "List email template trigger mappings",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Template trigger mappings",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTemplateMappingsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/notification-templates/email/{name}": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "email-otp",
+              "welcome",
+              "password-reset-request",
+              "password-changed-success"
+            ]
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Get an email template by name",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTemplateResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Create or update an email template by name",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertEmailTemplateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailTemplateResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Delete an email template by name",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          },
+          "404": {
+            "description": "Template not found"
+          }
+        }
+      }
+    },
+    "/v1/system/notification-templates/email/{name}/render": {
+      "parameters": [
+        {
+          "name": "name",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "enum": [
+              "email-otp",
+              "welcome",
+              "password-reset-request",
+              "password-changed-success"
+            ]
+          }
+        }
+      ],
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Render an email template by name",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenderTemplateBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rendered template",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RenderTemplateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/notifications/send-templated/email": {
+      "post": {
+        "tags": [
+          "Templates"
+        ],
+        "summary": "Send a templated email",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SendTemplatedEmailBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Delivery result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SendTemplatedEmailResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/system/device-categories": {
+      "get": {
+        "tags": [
+          "Device Categories"
+        ],
+        "summary": "List device categories",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "archived"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device categories list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceCategory"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Device Categories"
+        ],
+        "summary": "Create device category",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceCategoryBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created device category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/device-categories/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Device Categories"
+        ],
+        "summary": "Get device category detail",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device category detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategory"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Device Categories"
+        ],
+        "summary": "Update device category",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceCategoryBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated device category",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceCategory"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/device-models": {
+      "get": {
+        "tags": [
+          "Device Models"
+        ],
+        "summary": "List device models",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "discontinued",
+                "coming_soon"
+              ]
+            }
+          },
+          {
+            "name": "category_id",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device models list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeviceModel"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Device Models"
+        ],
+        "summary": "Create device model",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceModelBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Created device model",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceModel"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/device-models/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Device Models"
+        ],
+        "summary": "Get device model detail",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device model detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeviceModel"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Device Models"
+        ],
+        "summary": "Update device model",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDeviceModelBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Update result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "updated"
+                  ],
+                  "properties": {
+                    "updated": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/devices": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "List devices",
+        "description": "Lists system devices. Admins receive full data. `auditor` tokens with `audit_only` scope may also access this route and receive masked fields.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device list response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemDevicesListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Create single device",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeviceBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Device creation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "created"
+                  ],
+                  "properties": {
+                    "created": {
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "imei": {
+                      "type": "string"
+                    },
+                    "model_code": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "409": {
+            "description": "Conflict"
+          }
+        }
+      }
+    },
+    "/v1/system/members": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Search members",
+        "description": "Searches members across the care index. Admins receive full data. `auditor` tokens with `audit_only` scope may also access this route and receive masked contact fields.",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "condition",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "allergy",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "medication",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "has_active_incidents",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "description": "Compound cursor in the form `{timestamp}_{uuid}`.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member search response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberSearchResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/devices/bulk": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Bulk create devices",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkCreateDevicesBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk creation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "total",
+                    "created",
+                    "skipped",
+                    "batch_id"
+                  ],
+                  "properties": {
+                    "total": {
+                      "type": "integer"
+                    },
+                    "created": {
+                      "type": "integer"
+                    },
+                    "skipped": {
+                      "type": "integer"
+                    },
+                    "batch_id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payload"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/devices/{id}/modules": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get device module statuses",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device module statuses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "device_id",
+                    "imei",
+                    "model_code",
+                    "modules"
+                  ],
+                  "properties": {
+                    "device_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "imei": {
+                      "type": "string"
+                    },
+                    "model_code": {
+                      "type": "string"
+                    },
+                    "modules": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "status",
+                          "label"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "label": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/devices/{id}/history": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get device event history",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Device event history",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "device_id",
+                    "events"
+                  ],
+                  "properties": {
+                    "device_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "events": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "event_type",
+                          "actor_user_id",
+                          "details",
+                          "created_at"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "event_type": {
+                            "type": "string"
+                          },
+                          "actor_user_id": {
+                            "type": "string"
+                          },
+                          "details": {
+                            "type": "object",
+                            "additionalProperties": true
+                          },
+                          "created_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      }
+    },
+    "/v1/system/dashboard/sos-requests": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Recent SOS and fall alarm requests",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SOS requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "sos_requests",
+                    "total"
+                  ],
+                  "properties": {
+                    "sos_requests": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "id",
+                          "imei",
+                          "alarm_type",
+                          "latitude",
+                          "longitude",
+                          "device_time",
+                          "received_at"
+                        ],
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "imei": {
+                            "type": "string"
+                          },
+                          "alarm_type": {
+                            "type": "string"
+                          },
+                          "latitude": {
+                            "type": "number",
+                            "format": "double"
+                          },
+                          "longitude": {
+                            "type": "number",
+                            "format": "double"
+                          },
+                          "device_time": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "received_at": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/v1/system/dashboard/activity": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Recent audit activity",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Recent audit activity",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "activities",
+                    "total"
+                  ],
+                  "properties": {
+                    "activities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "event_id",
+                          "action",
+                          "consumer",
+                          "user_id",
+                          "created_at"
+                        ],
+                        "properties": {
+                          "event_id": {
+                            "type": "string"
+                          },
+                          "action": {
+                            "type": "string"
+                          },
+                          "consumer": {
+                            "type": "string"
+                          },
+                          "user_id": {
+                            "type": "string"
+                          },
+                          "created_at": {
+                            "type": "integer",
+                            "format": "int64"
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "HealthResponse": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          }
+        }
+      },
+      "AdminPingResponse": {
+        "type": "object",
+        "required": [
+          "status",
+          "surface"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "ok"
+          },
+          "surface": {
+            "type": "string",
+            "example": "control"
+          }
+        }
+      },
+      "ScopeCatalogScopeResponse": {
+        "type": "object",
+        "required": [
+          "name",
+          "description",
+          "first_party_default",
+          "third_party_required"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "control:users:list"
+          },
+          "description": {
+            "type": "string",
+            "example": "List and inspect control-managed users."
+          },
+          "first_party_default": {
+            "type": "boolean",
+            "example": false
+          },
+          "third_party_required": {
+            "type": "boolean",
+            "example": false
+          }
+        }
+      },
+      "RoleDefaultScopesResponse": {
+        "type": "object",
+        "required": [
+          "role",
+          "scopes"
+        ],
+        "properties": {
+          "role": {
+            "type": "string",
+            "example": "admin"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ScopeCatalogResponse": {
+        "type": "object",
+        "required": [
+          "scopes",
+          "assignable_scopes",
+          "admin_assignable_scopes",
+          "actor_assignable_scopes",
+          "role_default_scopes"
+        ],
+        "properties": {
+          "scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScopeCatalogScopeResponse"
+            }
+          },
+          "assignable_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "admin_assignable_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "actor_assignable_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "role_default_scopes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleDefaultScopesResponse"
+            }
+          }
+        }
+      },
+      "UpdateScopesBody": {
+        "type": "object",
+        "required": [
+          "scopes"
+        ],
+        "properties": {
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ScopesResponse": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "scopes"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "CreateManagedUserBody": {
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "roles"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email_verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateManagedUserResponse": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "roles",
+          "scopes",
+          "email_verified"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "email_verified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ManagedUserSummary": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "status",
+          "roles",
+          "scopes",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "description": "Masked for auditor responses."
+          },
+          "status": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ManagedUsersListResponse": {
+        "type": "object",
+        "required": [
+          "users",
+          "page"
+        ],
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ManagedUserSummary"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "CreateAuditorBody": {
+        "type": "object",
+        "required": [
+          "email",
+          "password",
+          "expires_at"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          },
+          "expires_at": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unix timestamp seconds."
+          },
+          "allowed_ips": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string",
+              "description": "Exact IP or CIDR."
+            }
+          }
+        }
+      },
+      "ResetAuditorPasswordBody": {
+        "type": "object",
+        "required": [
+          "password"
+        ],
+        "properties": {
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        }
+      },
+      "AuditorAccountResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "email",
+          "role",
+          "created_by",
+          "expires_at",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "role": {
+            "type": "string",
+            "example": "auditor"
+          },
+          "created_by": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expires_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "allowed_ips": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "string"
+            }
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AuditorAccountsListResponse": {
+        "type": "object",
+        "required": [
+          "auditors"
+        ],
+        "properties": {
+          "auditors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditorAccountResponse"
+            }
+          }
+        }
+      },
+      "AuditorMutationResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "user_id",
+          "email",
+          "is_active",
+          "expires_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "expires_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "AuditLogItemResponse": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "user_id",
+          "action",
+          "consumer",
+          "created_at",
+          "payload"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "consumer": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          }
+        }
+      },
+      "AuditLogsPageResponse": {
+        "type": "object",
+        "required": [
+          "limit",
+          "next_cursor",
+          "has_more"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AuditLogsListResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditLogItemResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ApiClientRecordResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "client_id",
+          "client_number",
+          "client_ref",
+          "display_name",
+          "description",
+          "platform",
+          "surface",
+          "environment",
+          "client_type",
+          "status",
+          "allowed_audiences",
+          "allowed_origins",
+          "ip_allowlist",
+          "require_mtls",
+          "is_version_enforced",
+          "min_app_version",
+          "max_app_version",
+          "user_rate_policy",
+          "client_safety_policy",
+          "created_at",
+          "updated_at",
+          "last_used_at",
+          "created_by",
+          "updated_by",
+          "notes",
+          "has_active_secret"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_number": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "client_ref": {
+            "type": "string",
+            "example": "CLT-000123"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "client_type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "confidential"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "revoked"
+            ]
+          },
+          "allowed_audiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_origins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ip_allowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "require_mtls": {
+            "type": "boolean"
+          },
+          "is_version_enforced": {
+            "type": "boolean"
+          },
+          "min_app_version": {
+            "type": "string"
+          },
+          "max_app_version": {
+            "type": "string"
+          },
+          "user_rate_policy": {
+            "type": "string"
+          },
+          "client_safety_policy": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "last_used_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "created_by": {
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "has_active_secret": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiClientsPageResponse": {
+        "type": "object",
+        "required": [
+          "limit",
+          "next_cursor",
+          "has_more"
+        ],
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true
+          },
+          "has_more": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ApiClientsListResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "page",
+          "total"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiClientRecordResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/ApiClientsPageResponse"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "CreateApiClientBody": {
+        "type": "object",
+        "required": [
+          "client_id",
+          "display_name",
+          "platform",
+          "surface",
+          "environment",
+          "client_type",
+          "user_rate_policy",
+          "client_safety_policy"
+        ],
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "display_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "client_type": {
+            "type": "string",
+            "enum": [
+              "public",
+              "confidential"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "revoked"
+            ]
+          },
+          "allowed_audiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_origins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ip_allowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "require_mtls": {
+            "type": "boolean"
+          },
+          "is_version_enforced": {
+            "type": "boolean"
+          },
+          "min_app_version": {
+            "type": "string"
+          },
+          "max_app_version": {
+            "type": "string"
+          },
+          "user_rate_policy": {
+            "type": "string"
+          },
+          "client_safety_policy": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateApiClientBody": {
+        "type": "object",
+        "properties": {
+          "display_name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string"
+          },
+          "surface": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "string"
+          },
+          "client_type": {
+            "type": "string"
+          },
+          "allowed_audiences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allowed_origins": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ip_allowlist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "require_mtls": {
+            "type": "boolean"
+          },
+          "is_version_enforced": {
+            "type": "boolean"
+          },
+          "min_app_version": {
+            "type": "string"
+          },
+          "max_app_version": {
+            "type": "string"
+          },
+          "user_rate_policy": {
+            "type": "string"
+          },
+          "client_safety_policy": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "SetApiClientStatusBody": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "suspended",
+              "revoked"
+            ]
+          }
+        }
+      },
+      "RotateApiClientSecretBody": {
+        "type": "object",
+        "properties": {
+          "expires_at_unix": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ApiClientCreateResponse": {
+        "type": "object",
+        "required": [
+          "client",
+          "secret_plaintext"
+        ],
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ApiClientRecordResponse"
+          },
+          "secret_plaintext": {
+            "type": "string",
+            "nullable": true
+          }
+        }
+      },
+      "ApiClientRotateSecretResponse": {
+        "type": "object",
+        "required": [
+          "client",
+          "secret_version",
+          "secret_plaintext"
+        ],
+        "properties": {
+          "client": {
+            "$ref": "#/components/schemas/ApiClientRecordResponse"
+          },
+          "secret_version": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "secret_plaintext": {
+            "type": "string"
+          }
+        }
+      },
+      "ApiClientEventResponse": {
+        "type": "object",
+        "required": [
+          "event_id",
+          "client_id",
+          "event_type",
+          "actor_user_id",
+          "payload",
+          "created_at"
+        ],
+        "properties": {
+          "event_id": {
+            "type": "string"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "event_type": {
+            "type": "string"
+          },
+          "actor_user_id": {
+            "type": "string"
+          },
+          "payload": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "ApiClientEventsListResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "page"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApiClientEventResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "RateLimitPolicyResponse": {
+        "type": "object",
+        "required": [
+          "name",
+          "scope",
+          "route_group",
+          "requests_per_min",
+          "requests_per_hour",
+          "burst",
+          "created_at"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string"
+          },
+          "route_group": {
+            "type": "string"
+          },
+          "requests_per_min": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "requests_per_hour": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "burst": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "RateLimitPoliciesListResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "page"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RateLimitPolicyResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "BillingPlanResponse": {
+        "type": "object",
+        "required": [
+          "plan_id",
+          "plan_code",
+          "name",
+          "description",
+          "priority",
+          "interval",
+          "price_cents",
+          "currency",
+          "device_limit",
+          "storage_limit_bytes",
+          "retention_days",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "plan_id": {
+            "type": "string"
+          },
+          "plan_code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "price_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "device_limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "storage_limit_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "retention_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BillingPlansListResponse": {
+        "type": "object",
+        "required": [
+          "plans",
+          "page"
+        ],
+        "properties": {
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillingPlanResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "CreateBillingPlanBody": {
+        "type": "object",
+        "required": [
+          "plan_code",
+          "name",
+          "interval",
+          "price_cents",
+          "device_limit",
+          "storage_limit_bytes",
+          "retention_days"
+        ],
+        "properties": {
+          "plan_code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "price_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "device_limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "storage_limit_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "retention_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          }
+        }
+      },
+      "UpdateBillingPlanBody": {
+        "type": "object",
+        "properties": {
+          "plan_code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "priority": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "interval": {
+            "type": "string",
+            "enum": [
+              "monthly",
+              "yearly",
+              "lifetime"
+            ]
+          },
+          "price_cents": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "device_limit": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "storage_limit_bytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "retention_days": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          }
+        }
+      },
+      "BillingSubscriptionResponse": {
+        "type": "object",
+        "required": [
+          "subscription_id",
+          "subscription_code",
+          "user_id",
+          "plan_id",
+          "plan_code",
+          "status",
+          "start_date",
+          "end_date",
+          "auto_renew",
+          "device_count",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "subscription_id": {
+            "type": "string"
+          },
+          "subscription_code": {
+            "type": "string"
+          },
+          "user_id": {
+            "type": "string"
+          },
+          "plan_id": {
+            "type": "string"
+          },
+          "plan_code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "past_due",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "start_date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "end_date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "auto_renew": {
+            "type": "boolean"
+          },
+          "device_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BillingSubscriptionsListResponse": {
+        "type": "object",
+        "required": [
+          "subscriptions",
+          "page"
+        ],
+        "properties": {
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BillingSubscriptionResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "CreateBillingSubscriptionBody": {
+        "type": "object",
+        "required": [
+          "user_id"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "plan_id": {
+            "type": "string"
+          },
+          "plan_code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "past_due",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "start_date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "end_date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "auto_renew": {
+            "type": "boolean"
+          },
+          "device_count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpdateBillingSubscriptionBody": {
+        "type": "object",
+        "properties": {
+          "plan_id": {
+            "type": "string"
+          },
+          "plan_code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "trial",
+              "active",
+              "past_due",
+              "cancelled",
+              "expired"
+            ]
+          },
+          "end_date": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "auto_renew": {
+            "type": "boolean"
+          },
+          "device_count": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UpsertEmailTemplateBody": {
+        "type": "object",
+        "required": [
+          "subject_template",
+          "html_template"
+        ],
+        "properties": {
+          "subject_template": {
+            "type": "string"
+          },
+          "html_template": {
+            "type": "string"
+          },
+          "updated_by": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailTemplateResponse": {
+        "type": "object",
+        "required": [
+          "name",
+          "trigger_endpoints",
+          "description",
+          "subject_template",
+          "html_template",
+          "placeholders",
+          "created_at",
+          "updated_at",
+          "updated_by"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "trigger_endpoints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": {
+            "type": "string"
+          },
+          "subject_template": {
+            "type": "string"
+          },
+          "html_template": {
+            "type": "string"
+          },
+          "placeholders": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_by": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailTemplateListResponse": {
+        "type": "object",
+        "required": [
+          "templates",
+          "page"
+        ],
+        "properties": {
+          "templates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplateResponse"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "EmailTemplateMappingItem": {
+        "type": "object",
+        "required": [
+          "template_name",
+          "trigger_endpoint",
+          "description"
+        ],
+        "properties": {
+          "template_name": {
+            "type": "string"
+          },
+          "trigger_endpoint": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "EmailTemplateMappingsResponse": {
+        "type": "object",
+        "required": [
+          "mappings"
+        ],
+        "properties": {
+          "mappings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EmailTemplateMappingItem"
+            }
+          }
+        }
+      },
+      "RenderTemplateBody": {
+        "type": "object",
+        "properties": {
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RenderTemplateResponse": {
+        "type": "object",
+        "required": [
+          "name",
+          "subject",
+          "html"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          }
+        }
+      },
+      "SendTemplatedEmailBody": {
+        "type": "object",
+        "required": [
+          "user_id",
+          "destination",
+          "template_name"
+        ],
+        "properties": {
+          "user_id": {
+            "type": "string"
+          },
+          "destination": {
+            "type": "string"
+          },
+          "template_name": {
+            "type": "string",
+            "enum": [
+              "email-otp",
+              "welcome",
+              "password-reset-request",
+              "password-changed-success"
+            ]
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "SendTemplatedEmailResponse": {
+        "type": "object",
+        "required": [
+          "delivered",
+          "provider_used",
+          "attempted_providers",
+          "failure_reason",
+          "template_name",
+          "rendered_subject"
+        ],
+        "properties": {
+          "delivered": {
+            "type": "boolean"
+          },
+          "provider_used": {
+            "type": "string"
+          },
+          "attempted_providers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "failure_reason": {
+            "type": "string"
+          },
+          "template_name": {
+            "type": "string"
+          },
+          "rendered_subject": {
+            "type": "string"
+          }
+        }
+      },
+      "DeviceCategory": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "icon",
+          "status",
+          "sort_order",
+          "model_count",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "sort_order": {
+            "type": "integer"
+          },
+          "model_count": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateDeviceCategoryBody": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "UpdateDeviceCategoryBody": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "archived"
+            ]
+          },
+          "sort_order": {
+            "type": "integer"
+          }
+        }
+      },
+      "DeviceModel": {
+        "type": "object",
+        "required": [
+          "id",
+          "category_id",
+          "category_name",
+          "model_code",
+          "name",
+          "manufacturer",
+          "description",
+          "protocol",
+          "connectivity",
+          "features",
+          "image_url",
+          "status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "category_name": {
+            "type": "string"
+          },
+          "model_code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "IW",
+              "GT06",
+              "OTHER"
+            ]
+          },
+          "connectivity": {
+            "type": "string",
+            "enum": [
+              "4G",
+              "3G",
+              "WIFI",
+              "BLE",
+              "OTHER"
+            ]
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "discontinued",
+              "coming_soon"
+            ]
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CreateDeviceModelBody": {
+        "type": "object",
+        "required": [
+          "category_id",
+          "model_code",
+          "name"
+        ],
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "model_code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "IW",
+              "GT06",
+              "OTHER"
+            ]
+          },
+          "connectivity": {
+            "type": "string",
+            "enum": [
+              "4G",
+              "3G",
+              "WIFI",
+              "BLE",
+              "OTHER"
+            ]
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image_url": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateDeviceModelBody": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "protocol": {
+            "type": "string",
+            "enum": [
+              "IW",
+              "GT06",
+              "OTHER"
+            ]
+          },
+          "connectivity": {
+            "type": "string",
+            "enum": [
+              "4G",
+              "3G",
+              "WIFI",
+              "BLE",
+              "OTHER"
+            ]
+          },
+          "features": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "image_url": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "discontinued",
+              "coming_soon"
+            ]
+          }
+        }
+      },
+      "SystemDeviceSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "display_ref",
+          "imei",
+          "model_code",
+          "status",
+          "connection_status",
+          "owner_id",
+          "assigned_member_name",
+          "subscription_status",
+          "created_at",
+          "updated_at"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "display_ref": {
+            "type": "string"
+          },
+          "imei": {
+            "type": "string",
+            "description": "Masked for auditor responses."
+          },
+          "model_code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "connection_status": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assigned_member_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "assigned_member_name": {
+            "type": "string"
+          },
+          "subscription_status": {
+            "type": "string"
+          },
+          "firmware_version": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_ip": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_seen_at": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "last_telemetry_at": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "updated_at": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "SystemDevicesListResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "page"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SystemDeviceSummary"
+            }
+          },
+          "page": {
+            "$ref": "#/components/schemas/AuditLogsPageResponse"
+          }
+        }
+      },
+      "MemberSearchItem": {
+        "type": "object",
+        "required": [
+          "id",
+          "display_ref",
+          "name",
+          "email",
+          "phone",
+          "address",
+          "relationship",
+          "owner_id",
+          "conditions",
+          "allergies",
+          "medications",
+          "active_incident_count",
+          "created_at",
+          "relevance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "display_ref": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "description": "Masked for auditor responses."
+          },
+          "phone": {
+            "type": "string",
+            "description": "Masked for auditor responses."
+          },
+          "address": {
+            "type": "string"
+          },
+          "birth_date": {
+            "type": "string",
+            "nullable": true
+          },
+          "relationship": {
+            "type": "string"
+          },
+          "owner_id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "conditions": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "allergies": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "medications": {
+            "type": "object",
+            "additionalProperties": true
+          },
+          "active_incident_count": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "created_at": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "relevance": {
+            "type": "number",
+            "format": "float"
+          }
+        }
+      },
+      "MemberSearchResponse": {
+        "type": "object",
+        "required": [
+          "items",
+          "pagination"
+        ],
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberSearchItem"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "required": [
+              "limit",
+              "next_cursor",
+              "has_more"
+            ],
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "next_cursor": {
+                "type": "string",
+                "nullable": true
+              },
+              "has_more": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      },
+      "CreateDeviceBody": {
+        "type": "object",
+        "required": [
+          "imei",
+          "model_code"
+        ],
+        "properties": {
+          "imei": {
+            "type": "string"
+          },
+          "model_code": {
+            "type": "string"
+          },
+          "batch_id": {
+            "type": "string"
+          },
+          "supplier": {
+            "type": "string"
+          }
+        }
+      },
+      "BulkCreateDevicesBody": {
+        "type": "object",
+        "required": [
+          "imeis",
+          "model_code"
+        ],
+        "properties": {
+          "imeis": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "model_code": {
+            "type": "string"
+          },
+          "batch_id": {
+            "type": "string"
+          },
+          "supplier": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

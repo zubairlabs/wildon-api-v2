@@ -1,0 +1,9 @@
+DROP TABLE IF EXISTS billing_app.billing_idempotency_keys;
+DROP TABLE IF EXISTS billing_app.stripe_webhook_events;
+DROP TABLE IF EXISTS billing_app.transactions;
+DROP TABLE IF EXISTS billing_app.invoices;
+DROP TABLE IF EXISTS billing_app.usage_records;
+DROP TABLE IF EXISTS billing_app.subscriptions;
+DROP TABLE IF EXISTS billing_app.plan_entitlements;
+DROP TABLE IF EXISTS billing_app.plans;
+DROP SCHEMA IF EXISTS billing_app;

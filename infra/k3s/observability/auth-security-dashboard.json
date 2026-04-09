@@ -1,0 +1,26 @@
+{
+  "title": "Wildon Auth Security",
+  "description": "Operational dashboard for auth/security health",
+  "panels": [
+    {
+      "title": "HTTP Errors by Route",
+      "metric": "http_errors_total",
+      "group_by": ["route", "status", "error_code"]
+    },
+    {
+      "title": "gRPC Errors by Service",
+      "metric": "grpc_errors_total",
+      "group_by": ["service", "method", "error_code"]
+    },
+    {
+      "title": "Security Events",
+      "metric": "security_events_total",
+      "group_by": ["event_type"]
+    },
+    {
+      "title": "Rate Limit Blocks",
+      "metric": "rate_limit_blocks_total",
+      "group_by": ["route", "dimension"]
+    }
+  ]
+}

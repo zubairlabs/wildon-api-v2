@@ -1,0 +1,32 @@
+[package]
+name = "control-service"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+ammonia = "4"
+argon2 = "0.5"
+auth = { path = "../../crates/auth" }
+axum = { workspace = true, features = ["multipart"] }
+chrono.workspace = true
+common = { path = "../../crates/common" }
+contracts = { path = "../../crates/contracts" }
+config = { path = "../../crates/config" }
+logs-sdk = { path = "../../crates/logs-sdk" }
+middleware = { path = "../../crates/middleware" }
+observability = { path = "../../crates/observability" }
+redis = { version = "0.27", features = ["tokio-comp"] }
+ipnet = "2"
+rand = "0.8"
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+serde.workspace = true
+serde_json.workspace = true
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "postgres", "chrono", "uuid", "json"] }
+tokio.workspace = true
+tonic.workspace = true
+tracing.workspace = true
+tower-http = { version = "0.5", features = ["limit"] }
+uuid.workspace = true
+hmac = "0.12"
+sha2 = "0.10"
+hex = "0.4"

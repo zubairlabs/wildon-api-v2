@@ -1,0 +1,42 @@
+name: wildon-local
+
+services:
+  yugabyte:
+    image: yugabytedb/yugabyte:2.25.0.0-b489
+    container_name: wildon-yugabyte
+    command:
+      - bin/yugabyted
+      - start
+      - --background=false
+      - --advertise_address=yugabyte
+      - --ysql_enable_auth=false
+    ports:
+      - "${YUGABYTE_YSQL_HOST_PORT:-5433}:5433"
+      - "${YUGABYTE_MASTER_UI_HOST_PORT:-7000}:7000"
+      - "${YUGABYTE_TSERVER_UI_HOST_PORT:-9001}:9000"
+    volumes:
+      - yugabyte-data:/home/yugabyte/var
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: wildon-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_HOST_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+
+  nats:
+    image: nats:2.11-alpine
+    container_name: wildon-nats
+    command: ["-js", "-m", "8222", "-sd", "/data"]
+    ports:
+      - "${NATS_HOST_PORT:-4222}:4222"
+      - "${NATS_MONITOR_HOST_PORT:-8222}:8222"
+    volumes:
+      - nats-data:/data
+
+volumes:
+  yugabyte-data:
+  redis-data:
+  nats-data:
